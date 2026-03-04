@@ -1,7 +1,10 @@
 ﻿const { Project, Assignment, User, Submission } = require('../models');
 const { Op } = require('sequelize');
 const { checkAndAwardAutomaticBadges } = require('./badgeController');
-
+const {
+  notifyNewAssignment,
+  notifyGrade,
+} = require('../services/notificationServices');
 const { sendAssignmentNotification, sendGradeNotification } = require('../services/emailService');
 const JDOODLE_EXECUTE_URL = 'https://api.jdoodle.com/v1/execute';
 const JDOODLE_CREDIT_URL = 'https://api.jdoodle.com/v1/credit-spent';
@@ -79,7 +82,6 @@ const assignProject = async (req, res) => {
         message: 'Please provide student IDs array'
       });
     }
-
     const project = await Project.findOne({
       where: {
         id: projectId,
@@ -159,6 +161,9 @@ const assignProject = async (req, res) => {
       assignedStudents.forEach((student) => {
         sendAssignmentNotification(student, project, teacher).catch((err) => {
           console.error('Failed to send assignment notification:', err.message);
+        });
+        notifyNewAssignment(student.id, project, teacher).catch((err) => {
+          console.error('Failed to create assignment notification:', err.message);
         });
       });
     }
@@ -299,7 +304,6 @@ const gradeSubmission = async (req, res) => {
         message: 'Valid marks are required'
       });
     }
-
     const submission = await Submission.findByPk(submissionId, {
       include: [
         {
@@ -361,6 +365,9 @@ const gradeSubmission = async (req, res) => {
     if (student && project) {
       sendGradeNotification(student, project, submission).catch(err => {
         console.error('Failed to send grade notification:', err.message);
+      });
+      notifyGrade(student.id, project, submission.marks, project.maxMarks).catch((err) => {
+        console.error('Failed to create grade notification:', err.message);
       });
     }
 // Send grade notification email

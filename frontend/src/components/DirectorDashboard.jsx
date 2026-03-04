@@ -3,6 +3,7 @@ import api from '../services/api';
 import authService from '../services/authService';
 import UserManagement from './director/UserManagement';
 import DirectorProfile from './director/DirectorProfile';
+import { applyTheme, getInitialTheme, toggleTheme } from '../utils/theme';
 const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
 const fmt = (n) => (n == null ? '-' : Number(n).toLocaleString());
 
@@ -49,7 +50,7 @@ function Sidebar({ active, setActive, user, theme, setTheme, onLogout }) {
           </button>
         ))}
       </nav>
-      <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+      <button onClick={() => setTheme((prev) => toggleTheme(prev))}>
         {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
       </button>
       <button className="danger" onClick={onLogout}>Sign Out</button>
@@ -98,14 +99,16 @@ export default function DirectorDashboard() {
   const [department, setDepartment] = useState('all');
   const [chartType, setChartType] = useState('bar');
   const [chartDept, setChartDept] = useState('all');
-  const [theme, setTheme] = useState(() => localStorage.getItem('eduTheme') || 'light');
+  const [theme, setTheme] = useState(getInitialTheme);
   const [teacherDetail, setTeacherDetail] = useState(null);
   const [studentDetail, setStudentDetail] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [data, setData] = useState({ stats: {}, projects: [], departments: [], teachers: [], students: [] });
   const user = authService.getCurrentUser();
 
-  useEffect(() => localStorage.setItem('eduTheme', theme), [theme]);
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     setSearch('');
@@ -449,7 +452,7 @@ export default function DirectorDashboard() {
               <DirectorProfile
                 onClose={() => setShowProfile(false)}
                 theme={theme}
-                onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+                onToggleTheme={() => setTheme((prev) => toggleTheme(prev))}
               />
             </div>
           )}
@@ -807,7 +810,7 @@ const styles = `
     inset: 0;
     z-index: 45;
     overflow: auto;
-    background: #f8fafc;
+    background: linear-gradient(160deg, var(--bg), var(--bg-2));
   }
 
   @media (max-width: 1040px) {

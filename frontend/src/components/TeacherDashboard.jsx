@@ -9,6 +9,7 @@ import ReportsView from './teacher/ReportsView';
 import StatsCards from './teacher/StatsCards';
 import StudentSelector from './teacher/StudentSelector';
 import TeacherProfile from './teacher/TeacherProfile';
+import { applyTheme, getInitialTheme, toggleTheme } from '../utils/theme';
 import './teacher/teacherDashboard.css';
 
 function TeacherDashboard() {
@@ -20,7 +21,7 @@ function TeacherDashboard() {
   const [showStudentSelector, setShowStudentSelector] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState(() => localStorage.getItem('eduTheme') || 'dark');
+  const [theme, setTheme] = useState(getInitialTheme);
 
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
@@ -30,7 +31,7 @@ function TeacherDashboard() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('eduTheme', theme);
+    applyTheme(theme);
   }, [theme]);
 
   const fetchDashboardData = async () => {
@@ -99,7 +100,7 @@ function TeacherDashboard() {
             </button>
             <button
               className="td-button ghost"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={() => setTheme((prev) => toggleTheme(prev))}
             >
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </button>
@@ -257,11 +258,19 @@ function TeacherDashboard() {
       )}
 
       {showProfile && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, background: '#f8fafc', overflow: 'auto' }}>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1200,
+            background: theme === 'dark' ? '#071226' : '#f8fafc',
+            overflow: 'auto'
+          }}
+        >
           <TeacherProfile
             onClose={() => setShowProfile(false)}
             theme={theme}
-            onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+            onToggleTheme={() => setTheme((prev) => toggleTheme(prev))}
           />
         </div>
       )}

@@ -2,7 +2,7 @@ const Badge = require('../models/Badge');
 const User = require('../models/User');
 const Assignment = require('../models/Assignment');
 const Submission = require('../models/Submission');
-
+const { notifyBadge } = require('../services/notificationServices');
 // Badge definitions
 const BADGE_DEFINITIONS = {
   early_bird: { name: 'Early Bird', icon: '\ud83d\udc26', description: 'Submitted 2+ hours before deadline' },
@@ -55,6 +55,10 @@ const awardBadge = async (req, res) => {
       awardedBy: req.user.id,
       projectId: projectId || null,
       isAutomatic: false,
+    });
+
+    notifyBadge(studentId, badgeDef.name, badgeDef.icon).catch((err) => {
+      console.error('Failed to create badge notification:', err.message);
     });
 
     res.json({
@@ -179,6 +183,9 @@ const checkAndAwardAutomaticBadges = async (submission, assignment) => {
 
       const created = await Badge.create(candidate);
       awardedBadges.push(created);
+      notifyBadge(candidate.userId, candidate.name, candidate.icon).catch((err) => {
+        console.error('Failed to create automatic badge notification:', err.message);
+      });
     }
 
     return awardedBadges;

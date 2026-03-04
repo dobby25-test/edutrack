@@ -11,9 +11,11 @@ const projectRoutes = require('./routes/project');
 const bulkRoutes = require('./routes/bulks');
 const profileRoutes = require('./routes/profile');
 const badgeRoutes = require('./routes/badges');
+const analyticsRoutes = require('./routes/analytics');
+const leaderboardRoutes = require('./routes/leaderboard');
+const notificationRoutes = require('./routes/notification');
 
 const app = express();
-
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
   .map((o) => o.trim())
@@ -49,7 +51,9 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/bulk', bulkRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/badges', badgeRoutes);
-
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use((req, res) => {
   res.status(404).json({
     success: false,

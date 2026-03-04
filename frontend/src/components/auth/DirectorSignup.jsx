@@ -7,15 +7,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import authService from '../../services/authService';
-
-const THEME_STORAGE_KEY = 'edutrack_auth_theme';
-
-const getInitialTheme = () => {
-  if (typeof window === 'undefined') return 'dark';
-  const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (saved === 'light' || saved === 'dark') return saved;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-};
+import { applyTheme, getInitialTheme, toggleTheme } from '../../utils/theme';
 
 export default function DirectorSignup() {
   const navigate = useNavigate();
@@ -35,15 +27,10 @@ export default function DirectorSignup() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-auth-theme', theme);
-    }
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-    }
+    applyTheme(theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  const handleToggleTheme = () => setTheme((prev) => toggleTheme(prev));
 
   const set = (k, v) => {
     setForm(f => ({ ...f, [k]: v }));
@@ -133,7 +120,7 @@ export default function DirectorSignup() {
               <div className="logo-icon">E</div>
               <span>EduTrack</span>
             </div>
-            <button type="button" className="theme-toggle-btn" onClick={toggleTheme}>
+            <button type="button" className="theme-toggle-btn" onClick={handleToggleTheme}>
               {theme === 'dark' ? 'Light mode' : 'Dark mode'}
             </button>
           </div>
