@@ -31,23 +31,27 @@ export default function Leaderboard({ course, section, onClose }) {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
     const run = async () => {
-      setLoading(true);
+      if (isMounted) setLoading(true);
       try {
         const params = new URLSearchParams();
         if (scope === 'course' && course) params.set('course', course);
         if (scope === 'section' && section) params.set('section', section);
         const query = params.toString();
         const res = await api.get(`/leaderboard${query ? `?${query}` : ''}`);
-        setItems(Array.isArray(res?.data?.leaderboard) ? res.data.leaderboard : []);
+        if (isMounted) {
+          setItems(Array.isArray(res?.data?.leaderboard) ? res.data.leaderboard : []);
+        }
       } catch (error) {
         console.error('Failed to fetch leaderboard:', error);
-        setItems([]);
+        if (isMounted) setItems([]);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     void run();
+    return () => { isMounted = false; };
   }, [scope, course, section]);
 
   const title = useMemo(() => {

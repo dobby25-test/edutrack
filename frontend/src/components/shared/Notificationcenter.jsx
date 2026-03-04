@@ -32,12 +32,15 @@ export default function NotificationCenter() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
     const run = async () => {
       try {
         const res = await api.get('/notifications');
         const rows = Array.isArray(res?.data?.notifications) ? res.data.notifications : [];
-        setItems(rows);
-        setUnreadCount(Number(res?.data?.unreadCount) || 0);
+        if (isMounted) {
+          setItems(rows);
+          setUnreadCount(Number(res?.data?.unreadCount) || 0);
+        }
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
       }
@@ -46,7 +49,10 @@ export default function NotificationCenter() {
     const intervalId = setInterval(() => {
       void run();
     }, 30000);
-    return () => clearInterval(intervalId);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
   const refresh = async () => {

@@ -10,6 +10,8 @@ const {
   getAllUsers,
   forgotPassword,
   resetPassword,
+  refreshAccessToken,
+  logout,
   verifyAccessCode,
   registerDirector,
   updateUser
@@ -21,6 +23,8 @@ router.post('/register', register);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+router.post('/refresh-token', refreshAccessToken);
+router.post('/logout', logout);
 router.post('/verify-access-code', verifyAccessCode);
 router.post('/register-director', registerDirector);
 

@@ -3,6 +3,7 @@ const Project = require('./Project');
 const Assignment = require('./Assignment');
 const Submission = require('./Submission');
 const Badge = require('./Badge');
+const Notification = require('./Notification');
 
 // User -> Projects (Teacher creates many projects)
 User.hasMany(Project, {
@@ -74,10 +75,21 @@ Badge.belongsTo(Project, {
   as: 'project'
 });
 
+// User -> Notifications
+User.hasMany(Notification, {
+  foreignKey: 'userId',
+  as: 'notifications'
+});
+Notification.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
 module.exports = {
   User,
   Project,
   Assignment,
   Submission,
-  Badge
+  Badge,
+  Notification
 };

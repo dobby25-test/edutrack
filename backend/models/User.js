@@ -200,11 +200,27 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null
+    },
+    refreshToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null
+    },
+    refreshExpires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null
     }
   },
   {
     tableName: 'users',
     timestamps: true,
+    indexes: [
+      { fields: ['email'], unique: true },
+      { fields: ['role'] },
+      { fields: ['isActive'] },
+      { fields: ['refreshToken'] }
+    ],
     hooks: {
       beforeCreate: async (user) => {
         if (user.password) {

@@ -1,15 +1,34 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const User = require('../models/User');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailService');
 
 const getClientBaseUrl = () => (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
 
-const generateToken = (userId) => jwt.sign(
+const generateAccessToken = (userId) => jwt.sign(
   { userId },
   process.env.JWT_SECRET,
-  { expiresIn: process.env.JWT_EXPIRES_IN }
+  { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
 );
+
+const generateRefreshToken = () => crypto.randomBytes(48).toString('hex');
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+const issueTokenPair = async (user) => {
+  const token = generateAccessToken(user.id);
+  const refreshToken = generateRefreshToken();
+  const refreshExpires = new Date(
+    Date.now() + (Number(process.env.REFRESH_TOKEN_TTL_DAYS) || 14) * 24 * 60 * 60 * 1000
+  );
+
+  await user.update({
+    refreshToken: hashToken(refreshToken),
+    refreshExpires
+  });
+
+  return { token, refreshToken };
+};
 
 const normalizeNumber = (value) => {
   if (value === undefined || value === null || value === '') return null;
@@ -134,12 +153,13 @@ const register = async (req, res) => {
       isActive: true
     });
 
-    const token = generateToken(user.id);
+    const { token, refreshToken } = await issueTokenPair(user);
 
     return res.status(201).json({
       success: true,
       message: 'User registered successfully',
       token,
+      refreshToken,
       user: sanitizeUserResponse(user)
     });
   } catch (error) {
@@ -230,12 +250,13 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    const token = generateToken(user.id);
+    const { token, refreshToken } = await issueTokenPair(user);
 
     return res.json({
       success: true,
       message: 'Login successful',
       token,
+      refreshToken,
       user: sanitizeUserResponse(user)
     });
   } catch (error) {
@@ -251,7 +272,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: { exclude: ['password', 'resetToken', 'resetExpires'] }
+      attributes: { exclude: ['password', 'resetToken', 'resetExpires', 'refreshToken', 'refreshExpires'] }
     });
 
     if (!user) {
@@ -360,7 +381,9 @@ const resetPassword = async (req, res) => {
     await user.update({
       password,
       resetToken: null,
-      resetExpires: null
+      resetExpires: null,
+      refreshToken: null,
+      refreshExpires: null
     });
 
     return res.json({ success: true, message: 'Password reset successfully.' });
@@ -436,7 +459,7 @@ const registerDirector = async (req, res) => {
       isActive: true
     });
 
-    const token = generateToken(user.id);
+    const { token, refreshToken } = await issueTokenPair(user);
 
     sendWelcomeEmail(user).catch((err) => {
       console.error('Failed to send welcome email:', err.message);
@@ -446,6 +469,7 @@ const registerDirector = async (req, res) => {
       success: true,
       message: 'Director account created successfully',
       token,
+      refreshToken,
       user: sanitizeUserResponse(user)
     });
   } catch (error) {
@@ -485,6 +509,59 @@ const updateUser = async (req, res) => {
   }
 };
 
+const refreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const normalizedRefresh = typeof refreshToken === 'string' ? refreshToken.trim() : '';
+
+    if (!normalizedRefresh) {
+      return res.status(401).json({ success: false, message: 'Refresh token is required' });
+    }
+
+    const hashedRefresh = hashToken(normalizedRefresh);
+    const user = await User.findOne({
+      where: {
+        refreshToken: hashedRefresh,
+        refreshExpires: { [Op.gt]: new Date() },
+        isActive: true
+      }
+    });
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    }
+
+    const nextPair = await issueTokenPair(user);
+    return res.json({
+      success: true,
+      token: nextPair.token,
+      refreshToken: nextPair.refreshToken
+    });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to refresh token' });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const normalizedRefresh = typeof refreshToken === 'string' ? refreshToken.trim() : '';
+
+    if (normalizedRefresh) {
+      await User.update(
+        { refreshToken: null, refreshExpires: null },
+        { where: { refreshToken: hashToken(normalizedRefresh) } }
+      );
+    }
+
+    return res.json({ success: true, message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to logout' });
+  }
+};
+
 module.exports = {
   register,
   createUserByDirector,
@@ -494,6 +571,8 @@ module.exports = {
   getAllUsers,
   forgotPassword,
   resetPassword,
+  refreshAccessToken,
+  logout,
   verifyAccessCode,
   registerDirector,
   updateUser

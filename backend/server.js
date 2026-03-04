@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
@@ -16,6 +17,20 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const notificationRoutes = require('./routes/notification');
 
 const app = express();
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 25,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many authentication requests. Try again later.' }
+});
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests. Please slow down.' }
+});
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
   .map((o) => o.trim())
@@ -46,7 +61,8 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-app.use('/api/auth', authRoutes);
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/bulk', bulkRoutes);
 app.use('/api/profile', profileRoutes);

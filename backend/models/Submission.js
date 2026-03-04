@@ -50,7 +50,11 @@ const Submission = sequelize.define('Submission', {
   }
 }, {
   tableName: 'submissions',
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    { fields: ['assignmentId'], unique: true },
+    { fields: ['status'] }
+  ]
 });
 
 module.exports = Submission;

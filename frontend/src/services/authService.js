@@ -1,15 +1,17 @@
 ﻿import api from './api';
 
 const TOKEN_KEY = 'token';
+const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 
 const authService = {
   register: async (userData) => {
     try {
       const response = await api.post('/auth/register', userData);
-      const { token, user } = response.data || {};
+      const { token, refreshToken, user } = response.data || {};
 
       if (token) localStorage.setItem(TOKEN_KEY, token);
+      if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
 
       return response.data;
@@ -21,9 +23,10 @@ const authService = {
   login: async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, user } = response.data || {};
+      const { token, refreshToken, user } = response.data || {};
 
       if (token) localStorage.setItem(TOKEN_KEY, token);
+      if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
 
       return response.data;
@@ -38,6 +41,14 @@ const authService = {
 
   getToken() {
     return localStorage.getItem(TOKEN_KEY);
+  },
+
+  setRefreshToken(token) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  },
+
+  getRefreshToken() {
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
   },
 
   setUser(user) {
@@ -73,6 +84,7 @@ const authService = {
 
   logout(redirect = true) {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     if (redirect) window.location.href = '/login';
   }

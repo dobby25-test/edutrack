@@ -59,7 +59,8 @@ const authenticateToken = async (req, res, next) => {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
-        message: 'Token expired. Please login again.'
+        message: 'Token expired.',
+        code: 'TOKEN_EXPIRED'
       });
     }
     

@@ -1,5 +1,6 @@
-﻿const { Project, Assignment, User, Submission } = require('../models');
+const { Project, Assignment, User, Submission } = require('../models');
 const { Op } = require('sequelize');
+const { sequelize } = require('../config/database');
 const { checkAndAwardAutomaticBadges } = require('./badgeController');
 const {
   notifyNewAssignment,
@@ -123,16 +124,36 @@ const assignProject = async (req, res) => {
       });
     }
 
-    const existingAssignments = await Assignment.findAll({
-      where: {
-        projectId: project.id,
-        studentId: { [Op.in]: validStudentIds }
-      },
-      attributes: ['studentId']
-    });
+    const newStudentIds = await sequelize.transaction(async (transaction) => {
+      const existingAssignments = await Assignment.findAll({
+        where: {
+          projectId: project.id,
+          studentId: { [Op.in]: validStudentIds }
+        },
+        attributes: ['studentId'],
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
 
-    const existingStudentIds = new Set(existingAssignments.map((assignment) => assignment.studentId));
-    const newStudentIds = validStudentIds.filter((studentId) => !existingStudentIds.has(studentId));
+      const existingStudentIds = new Set(existingAssignments.map((assignment) => assignment.studentId));
+      const computedNewStudentIds = validStudentIds.filter((studentId) => !existingStudentIds.has(studentId));
+
+      if (computedNewStudentIds.length > 0) {
+        await Assignment.bulkCreate(
+          computedNewStudentIds.map((studentId) => ({
+            projectId: project.id,
+            studentId,
+            status: 'assigned'
+          })),
+          {
+            transaction,
+            ignoreDuplicates: true
+          }
+        );
+      }
+
+      return computedNewStudentIds;
+    });
 
     if (newStudentIds.length === 0) {
       return res.status(200).json({
@@ -142,14 +163,6 @@ const assignProject = async (req, res) => {
         skippedCount: validStudentIds.length
       });
     }
-
-    const assignments = await Assignment.bulkCreate(
-      newStudentIds.map((studentId) => ({
-        projectId: project.id,
-        studentId,
-        status: 'assigned'
-      }))
-    );
 
     const teacher = await User.findByPk(req.user.id);
     const assignedStudents = await User.findAll({
@@ -170,9 +183,9 @@ const assignProject = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Project assigned to ${assignments.length} students`,
-      assignedCount: assignments.length,
-      skippedCount: validStudentIds.length - assignments.length
+      message: `Project assigned to ${newStudentIds.length} students`,
+      assignedCount: newStudentIds.length,
+      skippedCount: validStudentIds.length - newStudentIds.length
     });
   } catch (error) {
     console.error('Assign project error:', error);
@@ -297,8 +310,9 @@ const gradeSubmission = async (req, res) => {
   try {
     const { submissionId } = req.params;
     const { marks, feedback, teacherFeedback } = req.body;
+    const numericMarks = Number(marks);
 
-    if (marks === undefined || marks < 0) {
+    if (!Number.isFinite(numericMarks) || numericMarks < 0) {
       return res.status(400).json({
         success: false,
         message: 'Valid marks are required'
@@ -329,7 +343,7 @@ const gradeSubmission = async (req, res) => {
       });
     }
 
-    if (marks > submission.assignment.project.maxMarks) {
+    if (numericMarks > submission.assignment.project.maxMarks) {
       return res.status(400).json({
         success: false,
         message: `Marks cannot exceed ${submission.assignment.project.maxMarks}`
@@ -337,7 +351,7 @@ const gradeSubmission = async (req, res) => {
     }
 
     await submission.update({
-      marks,
+      marks: numericMarks,
       teacherFeedback: teacherFeedback ?? feedback ?? null,
       status: 'graded',
     });
@@ -350,7 +364,7 @@ const gradeSubmission = async (req, res) => {
       { where: { id: submission.assignmentId } }
     );
 
-    // ── CHECK AND AWARD AUTOMATIC BADGES ──
+    // -- CHECK AND AWARD AUTOMATIC BADGES --
     const badgesAwarded = await checkAndAwardAutomaticBadges(
       submission,
       submission.assignment
@@ -358,7 +372,7 @@ const gradeSubmission = async (req, res) => {
 
 
 
-    // ── SEND GRADE NOTIFICATION ────────────────────────────────────────
+    // -- SEND GRADE NOTIFICATION ----------------------------------------
     const student = submission.assignment.student;
     const project = submission.assignment.project;
     
@@ -496,53 +510,60 @@ const submitAssignment = async (req, res) => {
       });
     }
 
-    const assignment = await Assignment.findOne({
-      where: {
-        id: assignmentId,
-        studentId: req.user.id
-      },
-      include: [
-        {
-          model: Submission,
-          as: 'submission'
-        }
-      ]
-    });
-
-    if (!assignment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Assignment not found'
-      });
-    }
-
-    if (assignment.status === 'graded') {
-      return res.status(400).json({
-        success: false,
-        message: 'This assignment has already been graded and cannot be edited'
-      });
-    }
-
-    let submission = assignment.submission;
+    let submission;
     const payload = {
       codeContent: normalizedContent,
       studentComments: normalizedComments || null,
-      language: safeLanguage || submission?.language || null,
+      language: safeLanguage || null,
       status: 'submitted'
     };
 
-    if (submission) {
-      submission = await submission.update(payload);
-    } else {
-      submission = await Submission.create({
-        assignmentId: assignment.id,
-        ...payload
+    await sequelize.transaction(async (transaction) => {
+      const assignment = await Assignment.findOne({
+        where: {
+          id: assignmentId,
+          studentId: req.user.id
+        },
+        include: [
+          {
+            model: Submission,
+            as: 'submission'
+          }
+        ],
+        transaction,
+        lock: transaction.LOCK.UPDATE
       });
-    }
 
-    await assignment.update({
-      status: 'submitted',
-      submittedAt: new Date()
+      if (!assignment) {
+        throw Object.assign(new Error('Assignment not found'), { statusCode: 404 });
+      }
+
+      if (assignment.status === 'graded') {
+        throw Object.assign(
+          new Error('This assignment has already been graded and cannot be edited'),
+          { statusCode: 400 }
+        );
+      }
+
+      submission = assignment.submission;
+      const nextPayload = {
+        ...payload,
+        language: payload.language || submission?.language || null
+      };
+
+      if (submission) {
+        submission = await submission.update(nextPayload, { transaction });
+      } else {
+        submission = await Submission.create({
+          assignmentId: assignment.id,
+          ...nextPayload
+        }, { transaction });
+      }
+
+      await assignment.update({
+        status: 'submitted',
+        submittedAt: new Date()
+      }, { transaction });
     });
 
     res.json({
@@ -551,6 +572,13 @@ const submitAssignment = async (req, res) => {
       submission
     });
   } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message
+      });
+    }
+
     console.error('Submit assignment error:', error);
     res.status(500).json({
       success: false,
@@ -600,7 +628,7 @@ const getAllProjects = async (req, res) => {
 };
 
 
-// ── 1. Add to backend/controllers/projectController.js ──────────────────
+// -- 1. Add to backend/controllers/projectController.js ------------------
 
 /**
  * @route   GET /api/projects/director/stats
@@ -825,3 +853,4 @@ module.exports = {
   executeCode,
   getExecutionCredits
 };
+
