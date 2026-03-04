@@ -1,0 +1,216 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Consolas,monospace;
+}
+
+html, body, #root{
+  height:100%;
+  width:100%;
+}
+
+/* override global centering so login can manage layout */
+body{
+  margin:0;
+  display:block;
+}
+
+/* MAIN FULL BACKGROUND */
+.main{
+  min-height:100vh;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:24px;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at top,#0f2027 0%, #000000 65%),
+    linear-gradient(180deg, rgba(0,255,238,0.06) 0%, rgba(0,0,0,0) 50%);
+  color:#00ffee;
+  transition:0.4s;
+}
+
+/* LIGHT MODE */
+.light{
+  background: linear-gradient(135deg,#e3f2fd,#ffffff);
+  color:#111;
+}
+
+/* hacker-style background layers */
+.main::before{
+  content:"";
+  position:absolute;
+  inset:-50%;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,255,238,0.06) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(0deg, rgba(0,255,238,0.04) 0 1px, transparent 1px 28px);
+  transform:skewY(-4deg);
+  animation:gridDrift 18s linear infinite;
+  pointer-events:none;
+}
+
+.main::after{
+  content:"";
+  position:absolute;
+  inset:-10%;
+  background:
+    linear-gradient(180deg, rgba(0,255,238,0.12), rgba(0,0,0,0) 45%),
+    repeating-linear-gradient(180deg, rgba(0,255,238,0.08) 0 2px, transparent 2px 6px);
+  opacity:0.5;
+  animation:scan 6s ease-in-out infinite;
+  pointer-events:none;
+}
+
+/* light theme hacker grid */
+.light::before{
+  background:
+    repeating-linear-gradient(90deg, rgba(0,120,140,0.10) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(0deg, rgba(0,120,140,0.08) 0 1px, transparent 1px 32px);
+  opacity:0.6;
+}
+
+.light::after{
+  background:
+    linear-gradient(180deg, rgba(0,120,140,0.10), rgba(255,255,255,0) 45%),
+    repeating-linear-gradient(180deg, rgba(0,120,140,0.10) 0 2px, transparent 2px 7px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='120'><rect width='100%25' height='100%25' fill='none'/><g fill='%2300788c' font-family='Consolas,monospace' font-size='12' opacity='0.35'><text x='8' y='18'>0101 1100 0011</text><text x='24' y='40'>&lt;/&gt; #!/bin</text><text x='12' y='62'>1010 0110 1101</text><text x='28' y='84'>{ } =&gt; []</text><text x='10' y='106'>0110 1001 0010</text></g></svg>");
+  opacity:0.45;
+}
+
+@keyframes gridDrift{
+  0%{transform:translateY(0) skewY(-4deg);}
+  50%{transform:translateY(20px) skewY(-4deg);}
+  100%{transform:translateY(0) skewY(-4deg);}
+}
+
+@keyframes scan{
+  0%{transform:translateY(-10%); opacity:0.25;}
+  50%{transform:translateY(10%); opacity:0.6;}
+  100%{transform:translateY(-10%); opacity:0.25;}
+}
+
+/* toggle button */
+.themeToggle{
+  position:absolute;
+  top:20px;
+  right:20px;
+}
+
+.themeToggle button{
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+/* TERMINAL CARD */
+.terminal{
+  width:90%;
+  max-width:420px;
+  padding:35px;
+  border-radius:12px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 60px rgba(0,255,255,0.3);
+  text-align:center;
+  animation: glow 3s infinite alternate;
+}
+
+/* glow animation */
+@keyframes glow{
+  from{box-shadow:0 0 20px cyan;}
+  to{box-shadow:0 0 50px #00ffee;}
+}
+
+.light .terminal{
+  background:white;
+  color:black;
+  box-shadow:0 0 25px rgba(0,0,0,0.2);
+}
+
+/* top bar */
+.topbar{
+  display:flex;
+  align-items:center;
+  margin-bottom:20px;
+  gap:8px;
+}
+
+.dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+}
+.red{background:#ff5f56;}
+.yellow{background:#ffbd2e;}
+.green{background:#27c93f;}
+
+.topbar p{
+  margin-left:10px;
+  font-size:13px;
+}
+
+/* title */
+.terminal h1{
+  margin:10px 0;
+  font-size:26px;
+}
+
+.subtitle{
+  font-size:13px;
+  opacity:0.7;
+  margin-bottom:25px;
+}
+
+/* inputs */
+.terminal input{
+  width:100%;
+  padding:14px;
+  margin:12px 0;
+  border:1px solid #00ffee50;
+  background:black;
+  color:#00ffee;
+  border-radius:6px;
+  outline:none;
+}
+
+.light .terminal input{
+  background:#f5f5f5;
+  color:black;
+}
+
+/* button */
+.terminal button{
+  width:100%;
+  padding:14px;
+  margin-top:15px;
+  border:none;
+  border-radius:6px;
+  background: linear-gradient(90deg,#00f7ff,#0072ff);
+  color:white;
+  font-weight:bold;
+  letter-spacing:1px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.terminal button:hover{
+  transform:scale(1.05);
+}
+
+.footer{
+  margin-top:18px;
+  font-size:12px;
+  opacity:0.6;
+}
+
+/* mobile */
+@media(max-width:500px){
+  .terminal{
+    padding:25px 18px;
+  }
+}
