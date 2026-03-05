@@ -1,4 +1,5 @@
-﻿const { Sequelize } = require('sequelize');
+const { Sequelize } = require('sequelize');
+const pg = require('pg');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
@@ -18,6 +19,8 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT) || 5432,
     dialect: 'postgres',
+    // Keep pg in the serverless bundle; Sequelize loads it dynamically otherwise.
+    dialectModule: pg,
     logging: false,
     dialectOptions: isProduction
       ? {
@@ -51,4 +54,3 @@ const testConnection = async () => {
 };
 
 module.exports = { sequelize, testConnection };
-
