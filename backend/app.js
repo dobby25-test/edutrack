@@ -103,9 +103,15 @@ const ensureDatabaseReady = async () => {
     dbInitPromise = (async () => {
       await testConnection();
 
-      const shouldAlter = process.env.DB_SYNC_ALTER === 'true' || process.env.NODE_ENV !== 'production';
-      await sequelize.sync(shouldAlter ? { alter: true } : undefined);
-      console.log('Database synced');
+      const shouldAlter = process.env.DB_SYNC_ALTER === 'true';
+      const shouldSync = shouldAlter || process.env.DB_SYNC === 'true' || process.env.NODE_ENV !== 'production';
+
+      if (shouldSync) {
+        await sequelize.sync(shouldAlter ? { alter: true } : undefined);
+        console.log('Database synced');
+      } else {
+        console.log('Database sync skipped');
+      }
     })();
   }
 
