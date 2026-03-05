@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import authService from '../services/authService';
 import UserManagement from './director/UserManagement';
@@ -464,14 +464,14 @@ export default function DirectorDashboard() {
 
 const styles = `
   .dir-shell {
-    --bg: #070d18;
-    --bg-2: #10182b;
-    --surface: rgba(17, 26, 44, 0.84);
-    --soft: rgba(25, 37, 61, 0.9);
-    --ink: #eaf2ff;
-    --muted: #a4b3cc;
-    --border: rgba(120, 173, 255, 0.2);
-    --accent: #5aa2ff;
+    --bg: #0a0e27;
+    --bg-2: #141835;
+    --surface: rgba(20, 24, 53, 0.86);
+    --soft: rgba(30, 36, 69, 0.82);
+    --ink: #e8eaed;
+    --muted: #9ca3af;
+    --border: rgba(255, 255, 255, 0.12);
+    --accent: #0066ff;
     --danger: #ff7b84;
     min-height: 100vh;
     display: grid;
@@ -481,17 +481,17 @@ const styles = `
       radial-gradient(circle at 92% 10%, rgba(90, 162, 255, 0.22), transparent 42%),
       linear-gradient(150deg, var(--bg), var(--bg-2) 50%, #060b14 100%);
     color: var(--ink);
-    font-family: "IBM Plex Sans", sans-serif;
+    font-family: "Outfit", sans-serif;
   }
 
   .dir-shell.dark {
-    --bg: #070d18;
+    --bg: #0a0e27;
   }
 
   .dir-sidebar {
     padding: 18px;
     border-right: 1px solid var(--border);
-    background: rgba(10, 16, 28, 0.68);
+    background: rgba(10, 14, 39, 0.72);
     display: grid;
     gap: 10px;
     align-content: start;
@@ -501,7 +501,7 @@ const styles = `
     overflow: auto;
   }
 
-  .dir-sidebar h2 { margin: 0; font: 700 24px "Playfair Display", serif; }
+  .dir-sidebar h2 { margin: 0; font: 700 24px "Syne", serif; }
   .dir-sidebar p { margin: 0; color: var(--muted); font-size: 12px; }
 
   .dir-user {
@@ -561,7 +561,7 @@ const styles = `
 
   .dir-header h1 {
     margin: 0;
-    font: 700 30px "Playfair Display", serif;
+    font: 700 30px "Syne", serif;
   }
 
   .dir-header > div {
@@ -616,7 +616,7 @@ const styles = `
   }
 
   .cards p { margin: 0; color: var(--muted); font-size: 12px; }
-  .cards h3 { margin: 6px 0 0; font: 700 24px "Playfair Display", serif; }
+  .cards h3 { margin: 6px 0 0; font: 700 24px "Syne", serif; }
 
   .chart {
     border: 1px solid var(--border);
@@ -632,7 +632,7 @@ const styles = `
     align-items: center;
   }
 
-  .chart-head h3 { margin: 0; font: 700 22px "Playfair Display", serif; }
+  .chart-head h3 { margin: 0; font: 700 22px "Syne", serif; }
   .chart-head > div { display: flex; gap: 8px; flex-wrap: wrap; }
 
   .chart-head button {
@@ -669,7 +669,7 @@ const styles = `
     width: 38px;
     margin: 0 auto;
     border-radius: 8px 8px 4px 4px;
-    background: linear-gradient(180deg, #8cc8ff, var(--accent));
+    background: linear-gradient(180deg, #4da0ff, #ff3366);
   }
 
   .pie-layout {
@@ -783,7 +783,7 @@ const styles = `
     background: var(--soft);
   }
 
-  .modal header h3 { margin: 0; font: 700 20px "Playfair Display", serif; }
+  .modal header h3 { margin: 0; font: 700 20px "Syne", serif; }
 
   .modal header button {
     border: 1px solid var(--border);
@@ -837,5 +837,6 @@ const styles = `
     .chart-head { flex-direction: column; align-items: flex-start; }
   }
 `;
+
 
 

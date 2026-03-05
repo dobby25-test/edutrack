@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Login, ForgotPassword, ResetPassword } from './components/auth/AuthPages';
 import DirectorSignup from './components/auth/DirectorSignup';
@@ -14,6 +15,14 @@ function ProtectedRoute({ children, allowedRoles }) {
   if (allowedRoles && !allowedRoles.includes(userRole)) return <Navigate to="/login" replace />;
 
   return children;
+}
+
+function LandingPageRedirect() {
+  useEffect(() => {
+    window.location.replace('/landingpage.html');
+  }, []);
+
+  return null;
 }
 
 function App() {
@@ -52,7 +61,7 @@ function App() {
           }
         />
 
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<LandingPageRedirect />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

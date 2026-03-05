@@ -1,7 +1,7 @@
-// ═══════════════════════════════════════════════════════════════════════════
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FILE 2: frontend/src/components/auth/DirectorSignup.jsx
 // CREATE this new file
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -114,7 +114,7 @@ export default function DirectorSignup() {
           {/* Header */}
           <div className="signup-header">
             <button className="back-btn" onClick={() => navigate('/login')}>
-              ← Back to Login
+              â† Back to Login
             </button>
             <div className="logo">
               <div className="logo-icon">E</div>
@@ -151,7 +151,7 @@ export default function DirectorSignup() {
 
                 {error && (
                   <div className="error-alert">
-                    <span>⚠</span>
+                    <span>âš </span>
                     <span>{error}</span>
                   </div>
                 )}
@@ -177,7 +177,7 @@ export default function DirectorSignup() {
                     {loading ? (
                       <><span className="btn-spinner" />Verifying...</>
                     ) : (
-                      <>Continue →</>
+                      <>Continue â†’</>
                     )}
                   </button>
                 </form>
@@ -198,7 +198,7 @@ export default function DirectorSignup() {
 
                 {error && (
                   <div className="error-alert">
-                    <span>⚠</span>
+                    <span>âš </span>
                     <span>{error}</span>
                   </div>
                 )}
@@ -297,7 +297,7 @@ export default function DirectorSignup() {
                       className="back-btn-form"
                       onClick={() => setStep(1)}
                     >
-                      ← Back
+                      â† Back
                     </button>
                     <button type="submit" className="submit-btn" disabled={loading}>
                       {loading ? (
@@ -325,7 +325,7 @@ export default function DirectorSignup() {
   );
 }
 
-// ─── CSS ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -782,7 +782,110 @@ const css = `
       width: 40px;
     }
   }
+
+  /* Landing palette override */
+  .signup-page {
+    background:
+      radial-gradient(circle at 20% 30%, rgba(0, 102, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255, 51, 102, 0.12) 0%, transparent 48%),
+      #0a0e27;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .signup-container {
+    background: rgba(20, 24, 53, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+
+  .signup-header,
+  .signup-footer {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .logo-icon,
+  .progress-step.active .step-number,
+  .submit-btn {
+    background: linear-gradient(135deg, #0066ff 0%, #ff3366 100%);
+  }
+
+  .logo span,
+  .step-title,
+  .progress-step.active span,
+  .input-label,
+  .help-box strong {
+    color: #e8eaed;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .back-btn,
+  .progress-step span,
+  .step-subtitle,
+  .input-hint,
+  .help-box p,
+  .signup-footer p,
+  .theme-toggle-btn {
+    color: #9ca3af;
+  }
+
+  .theme-toggle-btn,
+  .back-btn-form,
+  .input-field,
+  .help-box {
+    background: rgba(30, 36, 69, 0.82);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e8eaed;
+  }
+
+  .input-field:focus {
+    border-color: #0066ff;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.2);
+  }
+
+  .help-box a,
+  .signup-footer a {
+    color: #66a3ff;
+  }
+
+  [data-auth-theme='light'] .signup-page {
+    background: linear-gradient(150deg, #eef3ff 0%, #f8fbff 100%);
+  }
+
+  [data-auth-theme='light'] .signup-container {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  }
+
+  [data-auth-theme='light'] .signup-header,
+  [data-auth-theme='light'] .signup-footer {
+    border-color: rgba(15, 23, 42, 0.1);
+  }
+
+  [data-auth-theme='light'] .logo span,
+  [data-auth-theme='light'] .step-title,
+  [data-auth-theme='light'] .progress-step.active span,
+  [data-auth-theme='light'] .input-label,
+  [data-auth-theme='light'] .help-box strong {
+    color: #0f172a;
+  }
+
+  [data-auth-theme='light'] .back-btn,
+  [data-auth-theme='light'] .progress-step span,
+  [data-auth-theme='light'] .step-subtitle,
+  [data-auth-theme='light'] .input-hint,
+  [data-auth-theme='light'] .help-box p,
+  [data-auth-theme='light'] .signup-footer p,
+  [data-auth-theme='light'] .theme-toggle-btn {
+    color: #475569;
+  }
+
+  [data-auth-theme='light'] .theme-toggle-btn,
+  [data-auth-theme='light'] .back-btn-form,
+  [data-auth-theme='light'] .input-field,
+  [data-auth-theme='light'] .help-box {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #0f172a;
+  }
 `;
-
-
-

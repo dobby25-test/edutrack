@@ -1,11 +1,36 @@
-﻿:root {
-  font-family: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --primary: #0066ff;
+  --primary-dark: #0052cc;
+  --accent: #ff3366;
+  --dark: #0a0e27;
+  --dark-800: #141835;
+  --dark-700: #1e2445;
+  --text: #e8eaed;
+  --text-dim: #9ca3af;
+  --success: #00d9a3;
+  --surface: rgba(30, 36, 69, 0.65);
+  --surface-strong: rgba(20, 24, 53, 0.88);
+  --border: rgba(255, 255, 255, 0.12);
+  font-family: 'Outfit', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme='light'] {
+  --dark: #eef3ff;
+  --dark-800: #ffffff;
+  --dark-700: #dce7ff;
+  --text: #0f172a;
+  --text-dim: #475569;
+  --surface: rgba(255, 255, 255, 0.86);
+  --surface-strong: rgba(255, 255, 255, 0.95);
+  --border: rgba(15, 23, 42, 0.12);
 }
 
 * {
@@ -23,8 +48,22 @@ body,
 
 body {
   min-width: 320px;
-  background: #070d18;
-  color: #eaf2ff;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(0, 102, 255, 0.16) 0%, transparent 46%),
+    radial-gradient(circle at 80% 70%, rgba(255, 51, 102, 0.14) 0%, transparent 42%),
+    var(--dark);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Syne', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 a {

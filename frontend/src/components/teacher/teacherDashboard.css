@@ -1,35 +1,35 @@
 ﻿.teacher-dashboard {
-  --td-bg: #070c17;
-  --td-bg-2: #10192d;
-  --td-panel: rgba(16, 25, 43, 0.8);
-  --td-panel-2: rgba(23, 35, 58, 0.82);
-  --td-border: rgba(99, 179, 255, 0.2);
-  --td-text: #eaf2ff;
-  --td-muted: #a7b6cf;
-  --td-accent: #63b3ff;
-  --td-accent-2: #5ef3d7;
-  --td-danger: #ff7b84;
+  --td-bg: #0a0e27;
+  --td-bg-2: #141835;
+  --td-panel: rgba(20, 24, 53, 0.84);
+  --td-panel-2: rgba(30, 36, 69, 0.82);
+  --td-border: rgba(255, 255, 255, 0.12);
+  --td-text: #e8eaed;
+  --td-muted: #9ca3af;
+  --td-accent: #0066ff;
+  --td-accent-2: #ff3366;
+  --td-danger: #ff6b85;
   min-height: 100vh;
   color: var(--td-text);
   background:
-    radial-gradient(circle at 10% 0%, rgba(94, 114, 235, 0.28), transparent 35%),
-    radial-gradient(circle at 90% 12%, rgba(99, 179, 255, 0.2), transparent 42%),
-    linear-gradient(150deg, var(--td-bg), var(--td-bg-2) 48%, #060a12 100%);
+    radial-gradient(circle at 12% 2%, rgba(0, 102, 255, 0.25), transparent 36%),
+    radial-gradient(circle at 88% 12%, rgba(255, 51, 102, 0.2), transparent 42%),
+    linear-gradient(150deg, var(--td-bg), var(--td-bg-2) 48%, #0a0e27 100%);
 }
 
 .teacher-dashboard.light {
-  --td-panel: rgba(255, 255, 255, 0.92);
-  --td-panel-2: rgba(246, 251, 255, 0.95);
-  --td-border: rgba(37, 99, 235, 0.16);
-  --td-text: #111827;
-  --td-muted: #546579;
-  --td-accent: #2563eb;
-  --td-accent-2: #06b6d4;
+  --td-panel: rgba(255, 255, 255, 0.94);
+  --td-panel-2: rgba(247, 250, 255, 0.96);
+  --td-border: rgba(15, 23, 42, 0.12);
+  --td-text: #0f172a;
+  --td-muted: #475569;
+  --td-accent: #0066ff;
+  --td-accent-2: #ff3366;
   --td-danger: #dc2626;
   background:
-    radial-gradient(circle at 12% 8%, rgba(191, 219, 254, 0.42), transparent 38%),
-    radial-gradient(circle at 86% 10%, rgba(167, 243, 208, 0.35), transparent 38%),
-    linear-gradient(165deg, #eef4ff, #f8fbff 44%, #eff5ff 100%);
+    radial-gradient(circle at 12% 8%, rgba(0, 102, 255, 0.16), transparent 38%),
+    radial-gradient(circle at 86% 10%, rgba(255, 51, 102, 0.14), transparent 38%),
+    linear-gradient(165deg, #eef3ff, #f8fbff 44%, #eff4ff 100%);
 }
 
 .td-shell {
@@ -39,7 +39,7 @@
 }
 
 .td-header {
-  background: rgba(7, 12, 23, 0.58);
+  background: rgba(10, 14, 39, 0.72);
   border-bottom: 1px solid var(--td-border);
   position: sticky;
   top: 0;
@@ -48,7 +48,7 @@
 }
 
 .teacher-dashboard.light .td-header {
-  background: rgba(244, 249, 255, 0.84);
+  background: rgba(245, 248, 255, 0.9);
 }
 
 .td-header-inner {
@@ -68,6 +68,7 @@
 }
 
 .td-title {
+  font-family: 'Syne', sans-serif;
   font-size: clamp(21px, 2.4vw, 30px);
   font-weight: 700;
 }
@@ -90,11 +91,11 @@
   border-radius: 999px;
   border: 1px solid var(--td-border);
   color: var(--td-muted);
-  background: rgba(11, 18, 32, 0.5);
+  background: rgba(20, 24, 53, 0.7);
 }
 
 .teacher-dashboard.light .td-pill {
-  background: rgba(227, 239, 255, 0.9);
+  background: rgba(234, 241, 255, 0.92);
 }
 
 .td-button {
@@ -105,12 +106,12 @@
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.2s ease;
   background: linear-gradient(95deg, var(--td-accent), var(--td-accent-2));
-  color: #061421;
+  color: #ffffff;
 }
 
 .td-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(99, 179, 255, 0.24);
+  box-shadow: 0 8px 20px rgba(0, 102, 255, 0.28);
 }
 
 .td-button.ghost {
@@ -622,3 +623,4 @@
     width: 100%;
   }
 }
+

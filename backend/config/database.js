@@ -4,6 +4,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const requiredEnv = ['DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST'];
 const missingEnv = requiredEnv.filter((name) => !process.env[name]);
+const isProduction = process.env.NODE_ENV === 'production';
 
 if (missingEnv.length > 0) {
   console.error(`Missing required database env vars: ${missingEnv.join(', ')}`);
@@ -18,6 +19,14 @@ const sequelize = new Sequelize(
     port: Number(process.env.DB_PORT) || 5432,
     dialect: 'postgres',
     logging: false,
+    dialectOptions: isProduction
+      ? {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        }
+      : undefined,
     pool: {
       max: 5,
       min: 0,

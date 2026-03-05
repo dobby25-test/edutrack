@@ -1,8 +1,8 @@
-// ═══════════════════════════════════════════════════════════════════════════
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // frontend/src/components/auth/AuthPages.jsx
-// Contains: Login, Register, ForgotPassword — all in one file
+// Contains: Login, Register, ForgotPassword â€” all in one file
 // Import whichever you need in App.jsx
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 import { useEffect, useState } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
@@ -21,7 +21,7 @@ function useAuthTheme() {
   return { theme, toggleTheme: handleToggleTheme };
 }
 
-// ─── Shared CSS ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Shared CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const sharedCss = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Epilogue:wght@300;400;500&family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap');
@@ -39,13 +39,13 @@ const sharedCss = `
 
   body { font-family: 'Epilogue', sans-serif; background: var(--paper); color: var(--ink); }
 
-  /* ── Layout Split ── */
+  /* â”€â”€ Layout Split â”€â”€ */
   .auth-shell {
     min-height: 100vh; display: grid;
     grid-template-columns: 1fr 1fr;
   }
 
-  /* ── Left Panel ── */
+  /* â”€â”€ Left Panel â”€â”€ */
   .auth-left {
     background: var(--ink);
     display: flex; flex-direction: column;
@@ -111,7 +111,7 @@ const sharedCss = `
   .stat-lbl { font-size: 11px; color: rgba(255,255,255,0.4);
     text-transform: uppercase; letter-spacing: 0.1em; margin-top: 3px; }
 
-  /* ── Right Panel ── */
+  /* â”€â”€ Right Panel â”€â”€ */
   .auth-right {
     display: flex; align-items: center; justify-content: center;
     padding: 48px 40px; background: var(--paper);
@@ -149,7 +149,7 @@ const sharedCss = `
   .auth-form-sub a { color: var(--ink); font-weight: 600; text-decoration: none; }
   .auth-form-sub a:hover { color: var(--accent); }
 
-  /* ── Form Fields ── */
+  /* â”€â”€ Form Fields â”€â”€ */
   .field-group { margin-bottom: 20px; }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .field-label {
@@ -185,7 +185,7 @@ const sharedCss = `
   }
   .field-select:focus { outline: none; border-color: var(--ink); }
 
-  /* ── Password Toggle ── */
+  /* â”€â”€ Password Toggle â”€â”€ */
   .field-pw-wrap { position: relative; }
   .field-pw-wrap .field-input { padding-right: 44px; }
   .pw-toggle {
@@ -197,7 +197,7 @@ const sharedCss = `
   }
   .pw-toggle:hover { color: var(--ink); }
 
-  /* ── Error / Success Banners ── */
+  /* â”€â”€ Error / Success Banners â”€â”€ */
   .auth-error {
     background: #fef2f2; border: 1.5px solid var(--accent);
     color: var(--accent); padding: 12px 14px;
@@ -211,7 +211,7 @@ const sharedCss = `
     display: flex; align-items: center; gap: 8px;
   }
 
-  /* ── Submit Button ── */
+  /* â”€â”€ Submit Button â”€â”€ */
   .auth-btn {
     width: 100%; padding: 14px;
     background: var(--ink); color: #fff;
@@ -226,7 +226,7 @@ const sharedCss = `
   .auth-btn:hover:not(:disabled) { background: var(--accent); }
   .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* ── Divider ── */
+  /* â”€â”€ Divider â”€â”€ */
   .auth-divider {
     display: flex; align-items: center; gap: 14px;
     margin: 24px 0; color: var(--border);
@@ -236,7 +236,7 @@ const sharedCss = `
   }
   .auth-divider span { font-size: 11px; color: var(--mid); white-space: nowrap; }
 
-  /* ── Role Pills ── */
+  /* â”€â”€ Role Pills â”€â”€ */
   .role-pills { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
   .role-pill {
     padding: 10px 8px; border: 1.5px solid var(--border);
@@ -252,7 +252,7 @@ const sharedCss = `
   }
   .role-pill.selected .role-pill-label { color: #fff; }
 
-  /* ── Spinner ── */
+  /* â”€â”€ Spinner â”€â”€ */
   .auth-spinner {
     width: 16px; height: 16px; border-radius: 50%;
     border: 2px solid rgba(255,255,255,0.3);
@@ -261,7 +261,7 @@ const sharedCss = `
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Forgot Password link ── */
+  /* â”€â”€ Forgot Password link â”€â”€ */
   .forgot-link {
     display: block; text-align: right; font-size: 12px;
     color: var(--mid); text-decoration: none; margin-top: -12px; margin-bottom: 20px;
@@ -269,14 +269,14 @@ const sharedCss = `
   }
   .forgot-link:hover { color: var(--ink); }
 
-  /* ── Terms ── */
+  /* â”€â”€ Terms â”€â”€ */
   .auth-terms {
     font-size: 11px; color: var(--mid); margin-top: 16px;
     text-align: center; line-height: 1.6;
   }
   .auth-terms a { color: var(--ink); text-decoration: underline; }
 
-  /* ── Responsive ── */
+  /* â”€â”€ Responsive â”€â”€ */
   @media (max-width: 768px) {
     .auth-shell { grid-template-columns: 1fr; }
     .auth-left { display: none; }
@@ -517,9 +517,136 @@ const sharedCss = `
     color: #1d4ed8;
     border-color: #1d4ed8;
   }
-`;
 
-// ─── Left Panel (shared) ─────────────────────────────────────────────────
+  /* Landing palette override */
+  :root {
+    --ink: #e8eaed;
+    --paper: #0a0e27;
+    --accent: #0066ff;
+    --mid: #9ca3af;
+    --border: rgba(255, 255, 255, 0.14);
+    --success: #00d9a3;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 20% 30%, rgba(0, 102, 255, 0.16), transparent 44%),
+      radial-gradient(circle at 80% 70%, rgba(255, 51, 102, 0.14), transparent 40%),
+      #0a0e27 !important;
+    color: var(--ink);
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .auth-left {
+    background: linear-gradient(160deg, #0a0e27, #141835) !important;
+    border-right: 1px solid var(--border);
+  }
+
+  .auth-right {
+    background: linear-gradient(180deg, #0f1432 0%, #0a0e27 100%) !important;
+  }
+
+  .auth-form-wrap {
+    border: 1px solid var(--border);
+    background: rgba(20, 24, 53, 0.9) !important;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+    border-radius: 16px;
+    padding: 28px;
+  }
+
+  .auth-brand-text,
+  .auth-form-title,
+  .auth-left-headline,
+  .auth-btn {
+    font-family: 'Syne', sans-serif !important;
+    text-transform: none;
+    letter-spacing: -0.01em;
+  }
+
+  .auth-left-headline span {
+    color: #ff3366;
+  }
+
+  .auth-left-sub,
+  .stat-lbl,
+  .auth-form-sub,
+  .auth-terms,
+  .field-label,
+  .forgot-link {
+    color: var(--mid) !important;
+  }
+
+  .field-input,
+  .field-select,
+  .role-pill,
+  .theme-toggle {
+    background: rgba(30, 36, 69, 0.8) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--ink) !important;
+    font-family: 'Outfit', sans-serif !important;
+  }
+
+  .field-input:focus,
+  .field-select:focus,
+  .role-pill:hover {
+    border-color: #0066ff !important;
+    box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2);
+  }
+
+  .auth-btn {
+    background: linear-gradient(135deg, #0066ff 0%, #ff3366 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 12px;
+  }
+
+  .auth-btn:hover:not(:disabled) {
+    box-shadow: 0 10px 24px rgba(0, 102, 255, 0.34);
+  }
+
+  .role-pill.selected {
+    background: rgba(0, 102, 255, 0.22) !important;
+    border-color: #0066ff !important;
+  }
+
+  [data-auth-theme='light'] {
+    --ink: #0f172a;
+    --paper: #eef3ff;
+    --accent: #0066ff;
+    --mid: #475569;
+    --border: rgba(15, 23, 42, 0.12);
+    --success: #059669;
+  }
+
+  [data-auth-theme='light'] body {
+    background: linear-gradient(150deg, #eef3ff 0%, #f8fbff 100%) !important;
+    color: var(--ink);
+  }
+
+  [data-auth-theme='light'] .auth-left {
+    background: linear-gradient(160deg, #1e2445, #141835) !important;
+  }
+
+  [data-auth-theme='light'] .auth-right {
+    background: linear-gradient(180deg, #eef3ff 0%, #f8fbff 100%) !important;
+  }
+
+  [data-auth-theme='light'] .auth-form-wrap {
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  }
+
+  [data-auth-theme='light'] .auth-form-title,
+  [data-auth-theme='light'] .auth-brand-text,
+  [data-auth-theme='light'] .field-input,
+  [data-auth-theme='light'] .field-select,
+  [data-auth-theme='light'] .role-pill,
+  [data-auth-theme='light'] .theme-toggle {
+    color: #0f172a !important;
+  }
+`;
+// â”€â”€â”€ Left Panel (shared) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function LeftPanel({ headline, sub }) {
   return (
@@ -565,9 +692,9 @@ function ThemeToggleButton() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // LOGIN PAGE
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export function Login() {
   const navigate = useNavigate();
@@ -679,9 +806,9 @@ export function Login() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // REGISTER PAGE
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export function Register() {
   const navigate = useNavigate();
@@ -906,9 +1033,9 @@ export function Register() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FORGOT PASSWORD PAGE
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export function ForgotPassword() {
   const [email, setEmail]       = useState('');
@@ -1006,7 +1133,7 @@ export function ForgotPassword() {
   );
 }
 
-// ─── Default export (Login) ───────────────────────────────────────────────
+// â”€â”€â”€ Default export (Login) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function ResetPassword() {
   const navigate = useNavigate();
   const { token } = useParams();
@@ -1113,6 +1240,8 @@ export function ResetPassword() {
 }
 
 export default Login;
+
+
 
 
 
