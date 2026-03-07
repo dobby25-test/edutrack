@@ -194,10 +194,10 @@ const createUserByDirector = async (req, res) => {
       });
     }
 
-    if (!['student', 'teacher', 'director'].includes(normalizedRole)) {
+    if (!['student', 'teacher'].includes(normalizedRole)) {
       return res.status(400).json({
         success: false,
-        message: 'Role must be student, teacher, or director'
+        message: 'Role must be student or teacher'
       });
     }
 

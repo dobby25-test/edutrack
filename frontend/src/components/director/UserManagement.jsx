@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import api from '../../services/api';
 
-const ROLE_OPTIONS = ['student', 'teacher', 'director'];
+const ROLE_OPTIONS = ['student', 'teacher'];
 
 const INITIAL_FORM = {
   name: '',

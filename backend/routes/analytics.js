@@ -8,7 +8,12 @@ const {
 const { authenticateToken, checkRole } = require('../middleware/auth');
 
 // Student analytics
-router.get('/student/:studentId', authenticateToken, getStudentAnalytics);
+router.get(
+  '/student/:studentId',
+  authenticateToken,
+  checkRole('student', 'teacher', 'director'),
+  getStudentAnalytics
+);
 
 // Teacher analytics
 router.get(

@@ -14,16 +14,43 @@ const { Op } = require('sequelize');
 const getStudentAnalytics = async (req, res) => {
   try {
     const { studentId } = req.params;
+    const targetStudentId = Number(studentId);
+
+    if (!Number.isInteger(targetStudentId) || targetStudentId <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid student id' });
+    }
+
+    if (req.user.role === 'student' && req.user.id !== targetStudentId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    if (req.user.role === 'teacher') {
+      const assignmentCount = await Assignment.count({
+        where: { studentId: targetStudentId },
+        include: [
+          {
+            model: Project,
+            as: 'project',
+            where: { teacherId: req.user.id },
+            required: true
+          }
+        ]
+      });
+
+      if (assignmentCount === 0) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
 
     // Get student
-    const student = await User.findByPk(studentId);
+    const student = await User.findByPk(targetStudentId);
     if (!student || student.role !== 'student') {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
     // Get all assignments
     const assignments = await Assignment.findAll({
-      where: { studentId },
+      where: { studentId: targetStudentId },
       include: [
         {
           model: Project,
@@ -104,7 +131,7 @@ const getStudentAnalytics = async (req, res) => {
 
     // Badges earned over time
     const badges = await Badge.findAll({
-      where: { userId: studentId },
+      where: { userId: targetStudentId },
       order: [['awardedAt', 'ASC']],
     });
 
@@ -171,10 +198,19 @@ const getStudentAnalytics = async (req, res) => {
 const getTeacherAnalytics = async (req, res) => {
   try {
     const { teacherId } = req.params;
+    const targetTeacherId = Number(teacherId);
+
+    if (!Number.isInteger(targetTeacherId) || targetTeacherId <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid teacher id' });
+    }
+
+    if (req.user.role === 'teacher' && req.user.id !== targetTeacherId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
 
     // Get all projects by teacher
     const projects = await Project.findAll({
-      where: { teacherId },
+      where: { teacherId: targetTeacherId },
       include: [
         {
           model: Assignment,
