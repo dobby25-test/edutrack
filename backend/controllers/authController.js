@@ -118,6 +118,14 @@ const sanitizeUserResponse = (user) => ({
   updatedAt: user.updatedAt
 });
 
+const hasDirectorAccount = async () => {
+  const director = await User.findOne({
+    where: { role: 'director' },
+    attributes: ['id']
+  });
+  return Boolean(director);
+};
+
 const register = async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
@@ -395,6 +403,14 @@ const resetPassword = async (req, res) => {
 
 const verifyAccessCode = async (req, res) => {
   try {
+    const directorAlreadyExists = await hasDirectorAccount();
+    if (directorAlreadyExists) {
+      return res.status(403).json({
+        success: false,
+        message: 'Director signup is closed. Please contact an existing director.'
+      });
+    }
+
     const { accessCode } = req.body;
 
     if (!accessCode) {
@@ -419,6 +435,14 @@ const verifyAccessCode = async (req, res) => {
 
 const registerDirector = async (req, res) => {
   try {
+    const directorAlreadyExists = await hasDirectorAccount();
+    if (directorAlreadyExists) {
+      return res.status(403).json({
+        success: false,
+        message: 'Director signup is closed. Please contact an existing director.'
+      });
+    }
+
     const { accessCode, collegeName, name, email, password } = req.body;
     const normalizedAccessCode = (accessCode || '').trim();
     const normalizedCollegeName = (collegeName || '').trim();
