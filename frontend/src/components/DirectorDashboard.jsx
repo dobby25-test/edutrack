@@ -3,6 +3,7 @@ import api from '../services/api';
 import authService from '../services/authService';
 import UserManagement from './director/UserManagement';
 import DirectorProfile from './director/DirectorProfile';
+import LogoLoader from './shared/LogoLoader';
 import useGlobalTheme from '../hooks/useGlobalTheme';
 const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
 const fmt = (n) => (n == null ? '-' : Number(n).toLocaleString());
@@ -30,14 +31,20 @@ function downloadCsv(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
-function Sidebar({ active, setActive, user, theme, onToggleTheme, onLogout }) {
+function Sidebar({ active, setActive, user, theme, onToggleTheme, onLogout, onOpenProfile }) {
   const tabs = ['overview', 'departments', 'teachers', 'projects', 'students', 'users'];
   return (
     <aside className="dir-sidebar">
       <h2>EduTrack</h2>
       <p>Director Portal</p>
       <div className="dir-user">
-        <span>{user?.name?.[0] || 'D'}</span>
+        <span>
+          {user?.profilePhoto ? (
+            <img src={user.profilePhoto} alt={user?.name || 'Director'} className="dir-user-avatar" />
+          ) : (
+            (user?.name?.[0] || 'D')
+          )}
+        </span>
         <div>
           <strong>{user?.name || 'Director'}</strong>
           <small>{user?.department || 'Administration'}</small>
@@ -53,6 +60,7 @@ function Sidebar({ active, setActive, user, theme, onToggleTheme, onLogout }) {
       <button onClick={onToggleTheme}>
         {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
       </button>
+      <button onClick={onOpenProfile}>My Profile</button>
       <button className="danger" onClick={onLogout}>Sign Out</button>
     </aside>
   );
@@ -92,6 +100,7 @@ function Empty({ msg }) {
 }
 
 export default function DirectorDashboard() {
+  const user = authService.getCurrentUser();
   const [active, setActive] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -103,8 +112,9 @@ export default function DirectorDashboard() {
   const [teacherDetail, setTeacherDetail] = useState(null);
   const [studentDetail, setStudentDetail] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '');
+  const [profileName, setProfileName] = useState(user?.name || 'Director');
   const [data, setData] = useState({ stats: {}, projects: [], departments: [], teachers: [], students: [] });
-  const user = authService.getCurrentUser();
 
   useEffect(() => {
     setSearch('');
@@ -169,7 +179,22 @@ export default function DirectorDashboard() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  const fetchProfileSnapshot = async () => {
+    try {
+      const res = await api.get('/profile/me');
+      const nextUser = res.data?.user;
+      if (!nextUser) return;
+      setProfilePhoto(nextUser.profilePhoto || '');
+      setProfileName(nextUser.name || user?.name || 'Director');
+    } catch (error) {
+      console.error('Failed to fetch director profile snapshot:', error);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+    void fetchProfileSnapshot();
+  }, []);
 
   const bySearch = useCallback((arr, keys) => {
     const q = search.trim().toLowerCase();
@@ -253,7 +278,15 @@ export default function DirectorDashboard() {
     <>
       <style>{styles}</style>
       <div className={`dir-shell ${theme}`}>
-        <Sidebar active={active} setActive={setActive} user={user} theme={theme} onToggleTheme={toggleTheme} onLogout={authService.logout} />
+        <Sidebar
+          active={active}
+          setActive={setActive}
+          user={{ ...user, profilePhoto: profilePhoto || user?.profilePhoto }}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onLogout={authService.logout}
+          onOpenProfile={() => setShowProfile(true)}
+        />
         <main className="dir-main">
           <header className="dir-header">
             <h1>{active[0].toUpperCase() + active.slice(1)}</h1>
@@ -268,7 +301,13 @@ export default function DirectorDashboard() {
               )}
               <button onClick={exportReport}>Generate Report</button>
               <button onClick={load}>Refresh</button>
-              <button onClick={() => setShowProfile(true)}>My Profile</button>
+              <button className="dir-avatar-btn" onClick={() => setShowProfile(true)} title="Open profile">
+                {profilePhoto ? (
+                  <img src={profilePhoto} alt={profileName} className="dir-avatar-image" />
+                ) : (
+                  <span className="dir-avatar-fallback">{(profileName || 'D').charAt(0).toUpperCase()}</span>
+                )}
+              </button>
             </div>
           </header>
           {['teachers', 'students', 'projects'].includes(active) && (
@@ -290,7 +329,11 @@ export default function DirectorDashboard() {
             </section>
           )}
 
-          {loading && <div className="empty">Loading dashboard data...</div>}
+          {loading && (
+            <div className="dir-loader">
+              <LogoLoader compact />
+            </div>
+          )}
 
           {!loading && active === 'overview' && (
             <>
@@ -446,7 +489,10 @@ export default function DirectorDashboard() {
           {showProfile && (
             <div className="dir-profile-layer">
               <DirectorProfile
-                onClose={() => setShowProfile(false)}
+                onClose={() => {
+                  setShowProfile(false);
+                  void fetchProfileSnapshot();
+                }}
                 theme={theme}
                 onToggleTheme={toggleTheme}
               />
@@ -518,6 +564,13 @@ const styles = `
     background: var(--accent);
     color: #081320;
     font-weight: 700;
+    overflow: hidden;
+  }
+
+  .dir-user-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .dir-user strong,
@@ -575,6 +628,28 @@ const styles = `
     padding: 8px 10px;
     cursor: pointer;
     font-weight: 600;
+  }
+
+  .dir-avatar-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .dir-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .dir-avatar-fallback {
+    font-family: "Syne", serif;
+    font-size: 16px;
+    font-weight: 700;
   }
 
   .dir-input {
@@ -750,6 +825,12 @@ const styles = `
   }
 
   .empty { padding: 14px; color: var(--muted); }
+
+  .dir-loader {
+    min-height: 240px;
+    display: grid;
+    place-items: center;
+  }
 
   .modal-bg {
     position: fixed;

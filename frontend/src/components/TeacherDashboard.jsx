@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 import projectService from '../services/projectService';
+import api from '../services/api';
 import CreateProjectModal from './teacher/CreateProjectModal';
 import ProjectsList from './teacher/ProjectList';
 import SubmissionsView from './teacher/SubmissionView';
@@ -9,10 +10,12 @@ import ReportsView from './teacher/ReportsView';
 import StatsCards from './teacher/StatsCards';
 import StudentSelector from './teacher/StudentSelector';
 import TeacherProfile from './teacher/TeacherProfile';
+import LogoLoader from './shared/LogoLoader';
 import useGlobalTheme from '../hooks/useGlobalTheme';
 import './teacher/teacherDashboard.css';
 
 function TeacherDashboard() {
+  const user = authService.getCurrentUser();
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -21,14 +24,28 @@ function TeacherDashboard() {
   const [showStudentSelector, setShowStudentSelector] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '');
+  const [profileName, setProfileName] = useState(user?.name || 'Instructor');
   const { theme, toggleTheme } = useGlobalTheme();
 
   const navigate = useNavigate();
-  const user = authService.getCurrentUser();
 
   useEffect(() => {
     fetchDashboardData();
+    fetchProfileSnapshot();
   }, []);
+
+  const fetchProfileSnapshot = async () => {
+    try {
+      const res = await api.get('/profile/me');
+      const nextUser = res.data?.user;
+      if (!nextUser) return;
+      setProfilePhoto(nextUser.profilePhoto || '');
+      setProfileName(nextUser.name || user?.name || 'Instructor');
+    } catch (error) {
+      console.error('Failed to fetch teacher profile snapshot:', error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -72,9 +89,8 @@ function TeacherDashboard() {
     return (
       <div className={`teacher-dashboard ${theme}`}>
         <div className="td-shell">
-          <div className="td-card">
-            <h2 className="td-card-title">Loading dashboard...</h2>
-            <p className="td-card-subtitle">Fetching latest projects and reviews.</p>
+          <div className="td-card td-loader-box">
+            <LogoLoader compact />
           </div>
         </div>
       </div>
@@ -91,8 +107,12 @@ function TeacherDashboard() {
           </div>
           <div className="td-actions">
             <span className="td-pill">{user?.department || 'Department'}</span>
-            <button className="td-button ghost" onClick={() => setShowProfile(true)}>
-              My Profile
+            <button className="td-avatar-btn" type="button" title="Open profile" onClick={() => setShowProfile(true)}>
+              {profilePhoto ? (
+                <img src={profilePhoto} alt={profileName} className="td-avatar-image" />
+              ) : (
+                <span className="td-avatar-fallback">{(profileName || 'I').charAt(0).toUpperCase()}</span>
+              )}
             </button>
             <button
               className="td-button ghost"
@@ -264,7 +284,10 @@ function TeacherDashboard() {
           }}
         >
           <TeacherProfile
-            onClose={() => setShowProfile(false)}
+            onClose={() => {
+              setShowProfile(false);
+              void fetchProfileSnapshot();
+            }}
             theme={theme}
             onToggleTheme={toggleTheme}
           />

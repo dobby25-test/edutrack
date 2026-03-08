@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
+import LogoLoader from '../shared/LogoLoader';
 
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -108,7 +109,13 @@ export default function DirectorProfile({ onClose, theme = 'light', onToggleThem
   };
 
   if (loading) {
-    return <div className={`dp-wrap ${theme}`}><div className="dp-card">Loading profile...</div></div>;
+    return (
+      <div className={`dp-wrap ${theme}`}>
+        <div className="dp-card" style={{ minHeight: 240, display: 'grid', placeItems: 'center' }}>
+          <LogoLoader compact />
+        </div>
+      </div>
+    );
   }
 
   if (!profile) {

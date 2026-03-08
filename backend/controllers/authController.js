@@ -235,6 +235,19 @@ const createUserByDirector = async (req, res) => {
   }
 };
 
+const buildDirectorManagedUserFields = (payload = {}, currentUser) => {
+  const nextRole = payload.role ? String(payload.role).trim().toLowerCase() : currentUser.role;
+  const nextName = payload.name !== undefined ? normalizeString(payload.name) : currentUser.name;
+  const nextEmail = payload.email !== undefined ? normalizeString(payload.email)?.toLowerCase() : currentUser.email;
+
+  return {
+    role: nextRole,
+    name: nextName,
+    email: nextEmail,
+    ...buildProfileFields(payload, false)
+  };
+};
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -511,14 +524,32 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const payload = {
-      name: normalizeString(req.body.name) ?? user.name,
-      ...buildProfileFields(req.body, false)
-    };
+    if (String(user.id) === String(req.user.id)) {
+      return res.status(400).json({ success: false, message: 'Directors cannot edit their own account from this endpoint' });
+    }
 
-    delete payload.email;
+    const payload = buildDirectorManagedUserFields(req.body, user);
+
+    if (!payload.name) {
+      return res.status(400).json({ success: false, message: 'Name is required' });
+    }
+
+    if (!payload.email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    if (!['student', 'teacher'].includes(payload.role)) {
+      return res.status(400).json({ success: false, message: 'Role must be student or teacher' });
+    }
+
+    if (payload.role === 'student') {
+      payload.employeeId = null;
+    }
+    if (payload.role === 'teacher') {
+      payload.rollNo = null;
+    }
+
     delete payload.password;
-    delete payload.role;
 
     await user.update(payload);
 
@@ -529,7 +560,40 @@ const updateUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Update user error:', error);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const firstError = error.errors?.[0]?.message || 'Duplicate value found';
+      return res.status(409).json({ success: false, message: firstError });
+    }
     return res.status(500).json({ success: false, message: 'Failed to update user' });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (String(user.id) === String(req.user.id)) {
+      return res.status(400).json({ success: false, message: 'Directors cannot delete their own account' });
+    }
+
+    await user.update({
+      isActive: false,
+      refreshToken: null,
+      refreshExpires: null
+    });
+
+    return res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete user' });
   }
 };
 
@@ -599,5 +663,6 @@ module.exports = {
   logout,
   verifyAccessCode,
   registerDirector,
-  updateUser
+  updateUser,
+  deleteUser
 };

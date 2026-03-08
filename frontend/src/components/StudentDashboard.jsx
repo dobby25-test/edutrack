@@ -1,8 +1,10 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import authService from '../services/authService';
 import projectService from '../services/projectService';
+import api from '../services/api';
 import SubmitWithEditor from './editor/SubmitWithEditor';
 import StudentProfile from './student/Studentprofile';
+import LogoLoader from './shared/LogoLoader';
 import useGlobalTheme from '../hooks/useGlobalTheme';
 import './studentDashboard.css';
 
@@ -17,9 +19,12 @@ function StudentDashboard() {
   const [sortBy, setSortBy] = useState('dueSoon');
   const [editorAssignment, setEditorAssignment] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '');
+  const [profileName, setProfileName] = useState(user?.name || 'Student');
 
   useEffect(() => {
-    fetchAssignments();
+    void fetchAssignments();
+    void fetchProfileSnapshot();
   }, []);
 
   const fetchAssignments = async () => {
@@ -31,6 +36,18 @@ function StudentDashboard() {
       console.error('Failed to fetch assignments:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProfileSnapshot = async () => {
+    try {
+      const res = await api.get('/profile/me');
+      const nextUser = res.data?.user;
+      if (!nextUser) return;
+      setProfilePhoto(nextUser.profilePhoto || '');
+      setProfileName(nextUser.name || user?.name || 'Student');
+    } catch (error) {
+      console.error('Failed to fetch profile snapshot:', error);
     }
   };
 
@@ -61,11 +78,8 @@ function StudentDashboard() {
         teacherName.includes(loweredQuery) ||
         department.includes(loweredQuery);
 
-      const matchesStatus =
-        statusFilter === 'all' || assignment.status === statusFilter;
-
-      const matchesSubject =
-        subjectFilter === 'all' || project.subject === subjectFilter;
+      const matchesStatus = statusFilter === 'all' || assignment.status === statusFilter;
+      const matchesSubject = subjectFilter === 'all' || project.subject === subjectFilter;
 
       return matchesQuery && matchesStatus && matchesSubject;
     });
@@ -132,13 +146,14 @@ function StudentDashboard() {
           </div>
           <div className="sd-actions">
             <span className="sd-pill">{user?.department || 'Department'}</span>
-            <button className="sd-button ghost" onClick={() => setShowProfile(true)}>
-              My Profile
+            <button className="sd-avatar-btn" type="button" title="Open profile" onClick={() => setShowProfile(true)}>
+              {profilePhoto ? (
+                <img src={profilePhoto} alt={profileName} className="sd-avatar-image" />
+              ) : (
+                <span className="sd-avatar-fallback">{(profileName || 'S').charAt(0).toUpperCase()}</span>
+              )}
             </button>
-            <button
-              className="sd-button ghost"
-              onClick={toggleTheme}
-            >
+            <button className="sd-button ghost" onClick={toggleTheme}>
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </button>
             <button className="sd-button danger" onClick={authService.logout}>
@@ -150,7 +165,7 @@ function StudentDashboard() {
 
       <main className="sd-shell">
         <section className="sd-card">
-          <h2 className="sd-card-title">Welcome, {user?.name || 'Student'}</h2>
+          <h2 className="sd-card-title">Welcome, {profileName}</h2>
           <p className="sd-card-subtitle">{user?.email}</p>
 
           <div className="sd-metrics">
@@ -186,22 +201,14 @@ function StudentDashboard() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <select
-              className="sd-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
+            <select className="sd-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="all">All Status</option>
               <option value="assigned">Assigned</option>
               <option value="in_progress">In Progress</option>
               <option value="submitted">Submitted</option>
               <option value="graded">Graded</option>
             </select>
-            <select
-              className="sd-select"
-              value={subjectFilter}
-              onChange={(e) => setSubjectFilter(e.target.value)}
-            >
+            <select className="sd-select" value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
               <option value="all">All Subjects</option>
               {subjects.map((subject) => (
                 <option key={subject} value={subject}>
@@ -209,11 +216,7 @@ function StudentDashboard() {
                 </option>
               ))}
             </select>
-            <select
-              className="sd-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
+            <select className="sd-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
               <option value="dueSoon">Due Date: Soonest</option>
               <option value="dueLate">Due Date: Latest</option>
               <option value="newest">Recently Assigned</option>
@@ -228,7 +231,9 @@ function StudentDashboard() {
           </div>
 
           {loading ? (
-            <p className="sd-card-subtitle">Loading assignments...</p>
+            <div className="sd-loader-box">
+              <LogoLoader compact />
+            </div>
           ) : filteredAssignments.length === 0 ? (
             <p className="sd-card-subtitle">No assignments match your filters.</p>
           ) : (
@@ -238,9 +243,7 @@ function StudentDashboard() {
                   <div className="sd-list-main">
                     <div className="sd-list-top">
                       <h4 className="sd-project-title">{assignment.project?.title || 'Untitled Project'}</h4>
-                      <span className={`sd-status ${assignment.status}`}>
-                        {getStatusLabel(assignment.status)}
-                      </span>
+                      <span className={`sd-status ${assignment.status}`}>{getStatusLabel(assignment.status)}</span>
                     </div>
                     <p className="sd-meta">
                       {assignment.project?.subject || 'No subject'} | Teacher: {assignment.project?.teacher?.name || 'N/A'}
@@ -248,9 +251,7 @@ function StudentDashboard() {
                     <p className="sd-meta">
                       Due: {formatDate(assignment.project?.dueDate)} | Max Marks: {assignment.project?.maxMarks ?? 'N/A'}
                     </p>
-                    {assignment.project?.description && (
-                      <p className="sd-meta">{assignment.project.description}</p>
-                    )}
+                    {assignment.project?.description && <p className="sd-meta">{assignment.project.description}</p>}
                     {assignment.project?.requirements && (
                       <p className="sd-meta">
                         <strong>Requirements:</strong> {assignment.project.requirements}
@@ -270,11 +271,7 @@ function StudentDashboard() {
                           Graded
                         </button>
                       ) : (
-                        <button
-                          className="sd-button"
-                          type="button"
-                          onClick={() => openSubmissionModal(assignment)}
-                        >
+                        <button className="sd-button" type="button" onClick={() => openSubmissionModal(assignment)}>
                           {assignment.submission ? 'Edit & Resubmit' : 'Write & Submit'}
                         </button>
                       )}
@@ -295,12 +292,16 @@ function StudentDashboard() {
             subject: editorAssignment.project?.subject || '',
             maxMarks: editorAssignment.project?.maxMarks || 100,
             dueDate: editorAssignment.project?.dueDate,
-            codeContent: editorAssignment.submission?.codeContent || ''
+            codeContent: editorAssignment.submission?.codeContent || '',
+            submissionLanguage: editorAssignment.submission?.language || '',
+            description: editorAssignment.project?.description || '',
+            requirements: editorAssignment.project?.requirements || ''
           }}
           onClose={closeSubmissionModal}
           onSuccess={async () => {
             closeSubmissionModal();
             await fetchAssignments();
+            await fetchProfileSnapshot();
           }}
         />
       )}
@@ -308,7 +309,10 @@ function StudentDashboard() {
       {showProfile && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1200, overflow: 'auto' }}>
           <StudentProfile
-            onClose={() => setShowProfile(false)}
+            onClose={() => {
+              setShowProfile(false);
+              void fetchProfileSnapshot();
+            }}
             theme={theme}
             onToggleTheme={toggleTheme}
           />

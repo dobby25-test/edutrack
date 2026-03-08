@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
+import LogoLoader from '../shared/LogoLoader';
 
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -128,7 +129,7 @@ export default function StudentProfile({ onClose, theme = 'light', onToggleTheme
     return (
       <div className={`sp-page ${theme}`}>
         <div className="sp-loading-wrap">
-          <div className="sp-loading-card">Loading profile...</div>
+          <LogoLoader compact />
         </div>
       </div>
     );

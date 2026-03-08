@@ -85,6 +85,38 @@
   flex-wrap: wrap;
 }
 
+.td-avatar-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--td-border);
+  background: var(--td-panel-2);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.td-avatar-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 102, 255, 0.24);
+}
+
+.td-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.td-avatar-fallback {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--td-text);
+}
+
 .td-pill {
   font-size: 12px;
   padding: 6px 10px;
@@ -173,6 +205,12 @@
   border-radius: 16px;
   padding: 18px;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.td-loader-box {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
 }
 
 .teacher-dashboard.light .td-card {

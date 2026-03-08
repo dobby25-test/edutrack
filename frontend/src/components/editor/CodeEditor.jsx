@@ -6,35 +6,61 @@ import Editor from '@monaco-editor/react';
 import { runCode, JDOODLE_LANGUAGES, checkCredits } from '../../services/Jdoodleservice';
 const LANGUAGES = [
   { id: 'java', label: 'Java', icon: 'Java',
-    starter: `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}` },
+    starter: `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Welcome to EduTrack");\n    }\n}` },
   { id: 'python', label: 'Python', icon: 'Py',
-    starter: `def main():\n    print("Hello, World!")\n\nif __name__ == "__main__":\n    main()` },
+    starter: `def main():\n    print("Welcome to EduTrack")\n\nif __name__ == "__main__":\n    main()` },
   { id: 'javascript', label: 'JavaScript', icon: 'JS',
-    starter: `function main() {\n    console.log("Hello, World!");\n}\n\nmain();` },
+    starter: `function main() {\n    console.log("Welcome to EduTrack");\n}\n\nmain();` },
   { id: 'cpp', label: 'C++', icon: 'C++',
-    starter: `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}` },
+    starter: `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Welcome to EduTrack" << endl;\n    return 0;\n}` },
   { id: 'c', label: 'C', icon: 'C',
-    starter: `#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}` },
+    starter: `#include <stdio.h>\n\nint main() {\n    printf("Welcome to EduTrack\\n");\n    return 0;\n}` },
   { id: 'php', label: 'PHP', icon: 'PHP',
-    starter: `<?php\necho "Hello, World!\\n";` },
+    starter: `<?php\necho "Welcome to EduTrack\\n";` },
   { id: 'ruby', label: 'Ruby', icon: 'RB',
-    starter: `puts "Hello, World!"` },
+    starter: `puts "Welcome to EduTrack"` },
   { id: 'go', label: 'Go', icon: 'Go',
-    starter: `package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, World!")\n}` },
+    starter: `package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Welcome to EduTrack")\n}` },
   { id: 'rust', label: 'Rust', icon: 'Rs',
-    starter: `fn main() {\n    println!("Hello, World!");\n}` },
+    starter: `fn main() {\n    println!("Welcome to EduTrack");\n}` },
   { id: 'kotlin', label: 'Kotlin', icon: 'Kt',
-    starter: `fun main() {\n    println("Hello, World!")\n}` },
+    starter: `fun main() {\n    println("Welcome to EduTrack")\n}` },
   { id: 'swift', label: 'Swift', icon: 'Sw',
-    starter: `print("Hello, World!")` },
+    starter: `print("Welcome to EduTrack")` },
   { id: 'sql', label: 'SQL', icon: 'SQL',
-    starter: `SELECT 'Hello, World!' AS message;` },
+    starter: `SELECT 'Welcome to EduTrack' AS message;` },
   { id: 'html', label: 'HTML', icon: 'HTML',
-    starter: `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>My Page</title>\n</head>\n<body>\n    <h1>Hello, World!</h1>\n</body>\n</html>` },
+    starter: `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>EduTrack</title>\n</head>\n<body>\n    <h1>Welcome to EduTrack</h1>\n</body>\n</html>` },
 ];
 
 const THEMES = [{ id:'vs-dark',label:'Dark'},{ id:'vs',label:'Light'},{ id:'hc-black',label:'High Contrast'}];
 const FONTSIZES = [12,13,14,15,16,18,20];
+
+const LANGUAGE_IDS = new Set(LANGUAGES.map((lang) => lang.id));
+const MONACO_LANGUAGE_MAP = {
+  javascript: 'javascript',
+  python: 'python',
+  java: 'java',
+  cpp: 'cpp',
+  c: 'c',
+  php: 'php',
+  ruby: 'ruby',
+  go: 'go',
+  rust: 'rust',
+  kotlin: 'kotlin',
+  swift: 'swift',
+  sql: 'sql',
+  html: 'html',
+};
+
+const normalizeLanguageId = (value) => {
+  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return LANGUAGE_IDS.has(normalized) ? normalized : 'java';
+};
+
+const getLanguageStarter = (value) => (
+  LANGUAGES.find((lang) => lang.id === value)?.starter ?? LANGUAGES[0].starter
+);
 
 // â”€â”€â”€ Output Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OutputPanel({ result, running, runStatus, onClear }) {
@@ -126,8 +152,13 @@ export default function CodeEditor({
   showCommentsField=!readOnly,
   showStdinField=true,
 }) {
-  const [language,     setLanguage]     = useState(existingLang||'java');
-  const [code,         setCode]         = useState(existingCode||LANGUAGES[0].starter);
+  const initialLanguage = normalizeLanguageId(existingLang);
+  const [language,     setLanguage]     = useState(initialLanguage);
+  const [code,         setCode]         = useState(
+    typeof existingCode === 'string' && existingCode.trim()
+      ? existingCode
+      : getLanguageStarter(initialLanguage)
+  );
   const [theme,        setTheme]        = useState('vs-dark');
   const [fontSize,     setFontSize]     = useState(14);
   const [comments,     setComments]     = useState('');
@@ -275,7 +306,7 @@ export default function CodeEditor({
         {/* Editor + Output */}
         <div className={`ed-body ${showOutput||showHtml?'ed-body--split':''}`}>
           <div className="ed-editor-pane">
-            <Editor height="100%" language={language==='cpp'?'cpp':language} value={code} theme={theme}
+            <Editor height="100%" language={MONACO_LANGUAGE_MAP[language] || 'plaintext'} value={code} theme={theme}
               onChange={val=>setCode(val||'')} onMount={e=>{editorRef.current=e;e.focus();}}
               options={{
                 fontSize, fontFamily:"'JetBrains Mono','Fira Code',monospace", fontLigatures:true,
