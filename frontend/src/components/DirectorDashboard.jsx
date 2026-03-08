@@ -3,7 +3,7 @@ import api from '../services/api';
 import authService from '../services/authService';
 import UserManagement from './director/UserManagement';
 import DirectorProfile from './director/DirectorProfile';
-import { applyTheme, getInitialTheme, toggleTheme } from '../utils/theme';
+import useGlobalTheme from '../hooks/useGlobalTheme';
 const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
 const fmt = (n) => (n == null ? '-' : Number(n).toLocaleString());
 
@@ -30,7 +30,7 @@ function downloadCsv(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
-function Sidebar({ active, setActive, user, theme, setTheme, onLogout }) {
+function Sidebar({ active, setActive, user, theme, onToggleTheme, onLogout }) {
   const tabs = ['overview', 'departments', 'teachers', 'projects', 'students', 'users'];
   return (
     <aside className="dir-sidebar">
@@ -50,7 +50,7 @@ function Sidebar({ active, setActive, user, theme, setTheme, onLogout }) {
           </button>
         ))}
       </nav>
-      <button onClick={() => setTheme((prev) => toggleTheme(prev))}>
+      <button onClick={onToggleTheme}>
         {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
       </button>
       <button className="danger" onClick={onLogout}>Sign Out</button>
@@ -99,16 +99,12 @@ export default function DirectorDashboard() {
   const [department, setDepartment] = useState('all');
   const [chartType, setChartType] = useState('bar');
   const [chartDept, setChartDept] = useState('all');
-  const [theme, setTheme] = useState(getInitialTheme);
+  const { theme, toggleTheme } = useGlobalTheme();
   const [teacherDetail, setTeacherDetail] = useState(null);
   const [studentDetail, setStudentDetail] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [data, setData] = useState({ stats: {}, projects: [], departments: [], teachers: [], students: [] });
   const user = authService.getCurrentUser();
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
 
   useEffect(() => {
     setSearch('');
@@ -257,7 +253,7 @@ export default function DirectorDashboard() {
     <>
       <style>{styles}</style>
       <div className={`dir-shell ${theme}`}>
-        <Sidebar active={active} setActive={setActive} user={user} theme={theme} setTheme={setTheme} onLogout={authService.logout} />
+        <Sidebar active={active} setActive={setActive} user={user} theme={theme} onToggleTheme={toggleTheme} onLogout={authService.logout} />
         <main className="dir-main">
           <header className="dir-header">
             <h1>{active[0].toUpperCase() + active.slice(1)}</h1>
@@ -452,7 +448,7 @@ export default function DirectorDashboard() {
               <DirectorProfile
                 onClose={() => setShowProfile(false)}
                 theme={theme}
-                onToggleTheme={() => setTheme((prev) => toggleTheme(prev))}
+                onToggleTheme={toggleTheme}
               />
             </div>
           )}

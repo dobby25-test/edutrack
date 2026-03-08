@@ -9,7 +9,7 @@ import ReportsView from './teacher/ReportsView';
 import StatsCards from './teacher/StatsCards';
 import StudentSelector from './teacher/StudentSelector';
 import TeacherProfile from './teacher/TeacherProfile';
-import { applyTheme, getInitialTheme, toggleTheme } from '../utils/theme';
+import useGlobalTheme from '../hooks/useGlobalTheme';
 import './teacher/teacherDashboard.css';
 
 function TeacherDashboard() {
@@ -21,7 +21,7 @@ function TeacherDashboard() {
   const [showStudentSelector, setShowStudentSelector] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState(getInitialTheme);
+  const { theme, toggleTheme } = useGlobalTheme();
 
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
@@ -29,10 +29,6 @@ function TeacherDashboard() {
   useEffect(() => {
     fetchDashboardData();
   }, []);
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
 
   const fetchDashboardData = async () => {
     try {
@@ -100,7 +96,7 @@ function TeacherDashboard() {
             </button>
             <button
               className="td-button ghost"
-              onClick={() => setTheme((prev) => toggleTheme(prev))}
+              onClick={toggleTheme}
             >
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </button>
@@ -270,7 +266,7 @@ function TeacherDashboard() {
           <TeacherProfile
             onClose={() => setShowProfile(false)}
             theme={theme}
-            onToggleTheme={() => setTheme((prev) => toggleTheme(prev))}
+            onToggleTheme={toggleTheme}
           />
         </div>
       )}

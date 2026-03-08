@@ -8,17 +8,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import authService from '../../services/authService';
-import { applyTheme, getInitialTheme, toggleTheme } from '../../utils/theme';
+import useGlobalTheme from '../../hooks/useGlobalTheme';
 
 function useAuthTheme() {
-  const [theme, setTheme] = useState(getInitialTheme);
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
-
-  const handleToggleTheme = () => setTheme((prev) => toggleTheme(prev));
-  return { theme, toggleTheme: handleToggleTheme };
+  const { theme, toggleTheme } = useGlobalTheme();
+  return { theme, toggleTheme };
 }
 
 // â”€â”€â”€ Shared CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

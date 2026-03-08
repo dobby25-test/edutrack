@@ -3,12 +3,12 @@ import authService from '../services/authService';
 import projectService from '../services/projectService';
 import SubmitWithEditor from './editor/SubmitWithEditor';
 import StudentProfile from './student/Studentprofile';
-import { applyTheme, getInitialTheme, toggleTheme } from '../utils/theme';
+import useGlobalTheme from '../hooks/useGlobalTheme';
 import './studentDashboard.css';
 
 function StudentDashboard() {
   const user = authService.getCurrentUser();
-  const [theme, setTheme] = useState(getInitialTheme);
+  const { theme, toggleTheme } = useGlobalTheme();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -17,10 +17,6 @@ function StudentDashboard() {
   const [sortBy, setSortBy] = useState('dueSoon');
   const [editorAssignment, setEditorAssignment] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
 
   useEffect(() => {
     fetchAssignments();
@@ -141,7 +137,7 @@ function StudentDashboard() {
             </button>
             <button
               className="sd-button ghost"
-              onClick={() => setTheme((prev) => toggleTheme(prev))}
+              onClick={toggleTheme}
             >
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </button>
@@ -314,7 +310,7 @@ function StudentDashboard() {
           <StudentProfile
             onClose={() => setShowProfile(false)}
             theme={theme}
-            onToggleTheme={() => setTheme((prev) => toggleTheme(prev))}
+            onToggleTheme={toggleTheme}
           />
         </div>
       )}
