@@ -219,6 +219,9 @@
   min-height: 240px;
   display: grid;
   place-items: center;
+  border: 1px dashed color-mix(in srgb, var(--sd-border) 84%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--sd-panel-soft) 74%, transparent);
 }
 
 .sd-list {
@@ -285,12 +288,22 @@
   color: #ffffff;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
 }
 
 .sd-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(0, 102, 255, 0.28);
+}
+
+.sd-button:active {
+  transform: translateY(0);
+}
+
+.sd-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .sd-button.ghost {
@@ -299,9 +312,19 @@
   border-color: var(--sd-border);
 }
 
+.sd-button.ghost:hover {
+  border-color: color-mix(in srgb, var(--sd-accent) 45%, var(--sd-border));
+  box-shadow: none;
+}
+
 .sd-button.danger {
   background: linear-gradient(95deg, var(--sd-danger), #ffb4b4);
   color: #270b0d;
+}
+
+.student-dashboard.light .sd-button.danger {
+  color: #ffffff;
+  background: linear-gradient(95deg, #dc2626, #ef4444);
 }
 
 .sd-row-actions {

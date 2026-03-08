@@ -118,6 +118,18 @@ const sanitizeUserResponse = (user) => ({
   updatedAt: user.updatedAt
 });
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (email) => typeof email === 'string' && EMAIL_RE.test(email) && email.length <= 254;
+const isValidName = (name) => typeof name === 'string' && name.trim().length >= 2 && name.trim().length <= 100;
+const isValidPassword = (password) => typeof password === 'string' && password.length >= 8 && password.length <= 128;
+const secureEquals = (a, b) => {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+};
+
 const hasDirectorAccount = async () => {
   const director = await User.findOne({
     where: { role: 'director' },
@@ -138,6 +150,18 @@ const register = async (req, res) => {
         success: false,
         message: 'Please provide all required fields: email, password, name, role'
       });
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+    }
+
+    if (!isValidName(normalizedName)) {
+      return res.status(400).json({ success: false, message: 'Name must be between 2 and 100 characters' });
+    }
+
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ success: false, message: 'Password must be 8 to 128 characters' });
     }
 
     if (normalizedRole !== 'student') {
@@ -192,6 +216,18 @@ const createUserByDirector = async (req, res) => {
         success: false,
         message: 'Please provide all required fields: email, password, name, role'
       });
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+    }
+
+    if (!isValidName(normalizedName)) {
+      return res.status(400).json({ success: false, message: 'Name must be between 2 and 100 characters' });
+    }
+
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ success: false, message: 'Password must be 8 to 128 characters' });
     }
 
     if (!['student', 'teacher'].includes(normalizedRole)) {
@@ -255,6 +291,10 @@ const login = async (req, res) => {
 
     if (!normalizedEmail || !password) {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
     }
 
     const user = await User.findOne({ where: { email: normalizedEmail } });
@@ -368,7 +408,9 @@ const forgotPassword = async (req, res) => {
         console.error('Failed to send reset email:', mailResult?.error || mailResult?.message || 'Unknown error');
       }
 
-      console.log('\nRESET LINK:', `${getClientBaseUrl()}/reset-password/${resetToken}\n`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('\nRESET LINK:', `${getClientBaseUrl()}/reset-password/${resetToken}\n`);
+      }
     }
 
     return res.json({ success: true, message: 'If that email exists, a reset link was sent.' });
@@ -383,8 +425,8 @@ const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
 
-    if (!password || password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ success: false, message: 'Password must be 8 to 128 characters.' });
     }
 
     const normalizedToken = decodeURIComponent((token || '').trim());
@@ -435,7 +477,7 @@ const verifyAccessCode = async (req, res) => {
       return res.status(500).json({ success: false, message: 'Access code system not configured' });
     }
 
-    if (String(accessCode).trim() !== validCode) {
+    if (!secureEquals(String(accessCode).trim(), validCode)) {
       return res.status(401).json({ success: false, message: 'Invalid access code. Please check and try again.' });
     }
 
@@ -467,7 +509,7 @@ const registerDirector = async (req, res) => {
       return res.status(500).json({ success: false, message: 'Access code system not configured' });
     }
 
-    if (!normalizedAccessCode || normalizedAccessCode !== validCode) {
+    if (!normalizedAccessCode || !secureEquals(normalizedAccessCode, validCode)) {
       return res.status(401).json({ success: false, message: 'Invalid access code' });
     }
 
@@ -478,8 +520,16 @@ const registerDirector = async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+    }
+
+    if (!isValidName(normalizedName)) {
+      return res.status(400).json({ success: false, message: 'Name must be between 2 and 100 characters' });
+    }
+
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ success: false, message: 'Password must be 8 to 128 characters' });
     }
 
     const exists = await User.findOne({ where: { email: normalizedEmail } });
@@ -534,8 +584,16 @@ const updateUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Name is required' });
     }
 
+    if (!isValidName(payload.name)) {
+      return res.status(400).json({ success: false, message: 'Name must be between 2 and 100 characters' });
+    }
+
     if (!payload.email) {
       return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    if (!isValidEmail(payload.email)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
     }
 
     if (!['student', 'teacher'].includes(payload.role)) {

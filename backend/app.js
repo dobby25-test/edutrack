@@ -18,6 +18,8 @@ const notificationRoutes = require('./routes/notification');
 
 const app = express();
 let dbInitPromise;
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -46,8 +48,19 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400
 }));
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
 
 app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true, limit: '8mb' }));
@@ -83,6 +96,13 @@ app.use((req, res) => {
 });
 
 app.use((err, _req, res, _next) => {
+  if (err?.message?.startsWith('CORS blocked for origin')) {
+    return res.status(403).json({
+      success: false,
+      message: 'Origin is not allowed'
+    });
+  }
+
   if (err?.type === 'entity.too.large') {
     return res.status(413).json({
       success: false,

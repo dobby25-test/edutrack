@@ -28,10 +28,11 @@ const SUPPORTED_SUBMISSION_LANGUAGES = new Set([
   ...Object.keys(JDOODLE_LANGUAGE_MAP),
   'html'
 ]);
+const devError = (error) => (process.env.NODE_ENV === 'development' ? error.message : undefined);
 
 const getJdoodleCredentials = () => {
-  const clientId = process.env.JDOODLE_CLIENT_ID || process.env.VITE_JDOODLE_CLIENT_ID || '';
-  const clientSecret = process.env.JDOODLE_CLIENT_SECRET || process.env.VITE_JDOODLE_CLIENT_SECRET || '';
+  const clientId = process.env.JDOODLE_CLIENT_ID || '';
+  const clientSecret = process.env.JDOODLE_CLIENT_SECRET || '';
   return { clientId, clientSecret };
 };
 
@@ -67,7 +68,7 @@ const createProject = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to create project',
-      error: error.message
+      error: devError(error)
     });
   }
 };
@@ -192,7 +193,7 @@ const assignProject = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to assign project',
-      error: error.message
+      error: devError(error)
     });
   }
 };
@@ -247,7 +248,7 @@ const getMyProjects = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch projects',
-      error: error.message
+      error: devError(error)
     });
   }
 };
@@ -301,7 +302,7 @@ const getProjectSubmissions = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch submissions',
-      error: error.message
+      error: devError(error)
     });
   }
 };
@@ -447,7 +448,7 @@ const getTeacherStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch statistics',
-      error: error.message
+      error: devError(error)
     });
   }
 };
@@ -486,7 +487,7 @@ const getStudentAssignments = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch assignments',
-      error: error.message
+      error: devError(error)
     });
   }
 };
@@ -583,7 +584,7 @@ const submitAssignment = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to submit assignment',
-      error: error.message
+      error: devError(error)
     });
   }
 };
@@ -622,7 +623,7 @@ const getAllProjects = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch projects',
-      error: error.message
+      error: devError(error)
     });
   }
 };
@@ -787,7 +788,7 @@ const executeCode = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to execute code',
-      error: error.message
+      error: devError(error)
     });
   }
 };

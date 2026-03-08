@@ -7,6 +7,13 @@ const User = require('../models/User');
  */
 const authenticateToken = async (req, res, next) => {
   try {
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        success: false,
+        message: 'Authentication is not configured'
+      });
+    }
+
     // Get token from header
     const authHeader = req.headers['authorization'];
     
@@ -18,9 +25,15 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // Format: "Bearer TOKEN"
-    const token = authHeader.split(' ')[1];
+    const [scheme, token] = authHeader.split(' ');
+    if (!scheme || scheme.toLowerCase() !== 'bearer') {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. Invalid token scheme.'
+      });
+    }
     
-    if (!token) {
+    if (!token || token.length < 20) {
       return res.status(401).json({
         success: false,
         message: 'Access denied. Invalid token format.'

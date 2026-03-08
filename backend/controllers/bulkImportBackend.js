@@ -199,7 +199,7 @@ const bulkImportUsers = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Bulk import failed',
-      error: error.message
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
