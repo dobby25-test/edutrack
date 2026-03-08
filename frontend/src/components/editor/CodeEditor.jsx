@@ -176,9 +176,19 @@ export default function CodeEditor({
   const [showHtml,     setShowHtml]     = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [credits,      setCredits]      = useState(null);
+  const [useTextareaFallback, setUseTextareaFallback] = useState(false);
 
   const editorRef = useRef(null);
   const saveTimer = useRef(null);
+
+  useEffect(() => {
+    const fallbackTimer = setTimeout(() => {
+      if (!editorRef.current) {
+        setUseTextareaFallback(true);
+      }
+    }, 4000);
+    return () => clearTimeout(fallbackTimer);
+  }, []);
 
   // Auto-save
   useEffect(() => {
@@ -306,17 +316,37 @@ export default function CodeEditor({
         {/* Editor + Output */}
         <div className={`ed-body ${showOutput||showHtml?'ed-body--split':''}`}>
           <div className="ed-editor-pane">
-            <Editor height="100%" language={MONACO_LANGUAGE_MAP[language] || 'plaintext'} value={code} theme={theme}
-              onChange={val=>setCode(val||'')} onMount={e=>{editorRef.current=e;e.focus();}}
-              options={{
-                fontSize, fontFamily:"'JetBrains Mono','Fira Code',monospace", fontLigatures:true,
-                minimap:{enabled:minimap}, wordWrap:wordWrap?'on':'off', readOnly,
-                automaticLayout:true, scrollBeyondLastLine:false, lineNumbers:'on',
-                folding:true, bracketPairColorization:{enabled:true}, tabSize:4,
-                smoothScrolling:true, cursorBlinking:'smooth', cursorSmoothCaretAnimation:'on',
-                padding:{top:16,bottom:16},
-              }}
-            />
+            {useTextareaFallback ? (
+              <textarea
+                className="ed-mobile-editor"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                readOnly={readOnly}
+                spellCheck={false}
+                placeholder="Write your code here..."
+              />
+            ) : (
+              <Editor
+                height="100%"
+                language={MONACO_LANGUAGE_MAP[language] || 'plaintext'}
+                value={code}
+                theme={theme}
+                onChange={val => setCode(val || '')}
+                onMount={e => {
+                  editorRef.current = e;
+                  setUseTextareaFallback(false);
+                  e.focus();
+                }}
+                options={{
+                  fontSize, fontFamily:"'JetBrains Mono','Fira Code',monospace", fontLigatures:true,
+                  minimap:{enabled:minimap}, wordWrap:wordWrap?'on':'off', readOnly,
+                  automaticLayout:true, scrollBeyondLastLine:false, lineNumbers:'on',
+                  folding:true, bracketPairColorization:{enabled:true}, tabSize:4,
+                  smoothScrolling:true, cursorBlinking:'smooth', cursorSmoothCaretAnimation:'on',
+                  padding:{top:16,bottom:16},
+                }}
+              />
+            )}
           </div>
           {showOutput && !showHtml && (
             <OutputPanel result={result} running={running} runStatus={runStatus}
@@ -437,6 +467,7 @@ const css=`
   .ed-body--split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .ed-body--split .ed-editor-pane{min-width:0}
   .ed-editor-pane{flex:1;overflow:hidden}
+  .ed-mobile-editor{width:100%;height:100%;border:none;outline:none;resize:none;padding:16px;background:#11111b;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.6}
   .out-panel{width:100%;min-width:0;max-width:none;display:flex;flex-direction:column;background:var(--bar3);border-left:1px solid var(--border);flex-shrink:0}
   .out-header{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bar);flex-shrink:0}
   .out-header-left{display:flex;align-items:center;gap:10px}

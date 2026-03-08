@@ -68,11 +68,18 @@ export default function SubmitWithEditor({ project, onClose, onSuccess }) {
   };
 
   const handleSaveDraft = async (code, language) => {
-    if (!assignmentId) return;
-    localStorage.setItem(
-      draftKey,
-      JSON.stringify({ codeContent: code, language, savedAt: Date.now() })
-    );
+    if (!assignmentId) {
+      setError('Missing assignment id. Please refresh this page.');
+      return;
+    }
+    try {
+      localStorage.setItem(
+        draftKey,
+        JSON.stringify({ codeContent: code, language, savedAt: Date.now() })
+      );
+    } catch {
+      setError('Could not save draft in this browser.');
+    }
   };
 
   return (
