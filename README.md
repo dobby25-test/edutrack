@@ -1,117 +1,154 @@
 # EduTrack
 
-EduTrack is a role-based academic project management platform for **Directors, Teachers, and Students**.
-It combines assignment operations, grading, analytics, leaderboard ranking, badges, notifications, and code execution into one workflow.
+EduTrack is a full-stack academic project and assignment platform for three roles:
+- Director
+- Teacher
+- Student
 
-## Why EduTrack
-- Role-specific dashboards for Director, Teacher, and Student
-- End-to-end assignment lifecycle: create -> assign -> submit -> grade
-- Smart progress visibility with analytics and leaderboard
-- In-app notifications plus email triggers
-- Built-in code runner (JDoodle-backed) for practical coding submissions
+It manages the full classroom workflow from project creation to submission, grading, analytics, leaderboard ranking, badges, notifications, and profile management.
 
-## Core Workflow
+## What EduTrack Solves
 
-### 1) Authentication and role routing
-- Users sign in via `/api/auth/login`
-- JWT token is attached by frontend interceptor (`frontend/src/services/api.js`)
-- Access is controlled by middleware (`authenticateToken`, `checkRole`)
+EduTrack helps institutions run practical, project-based learning with a single system:
+- Teachers can create, assign, review, and grade projects.
+- Students can track assignments, submit code, and view feedback.
+- Directors can manage users at scale and monitor institution-level performance.
 
-### 2) Teacher flow
-1. Create project (`POST /api/projects`)
-2. Assign students (`POST /api/projects/:projectId/assign`)
-3. Monitor submissions (`GET /api/projects/:projectId/submissions`)
-4. Grade work (`PUT /api/projects/submissions/:submissionId/grade`)
-5. Trigger badge checks + notifications + email updates
+## Key Features
 
-### 3) Student flow
-1. View assignments (`GET /api/projects/student/my-assignments`)
-2. Filter/sort to prioritize work
-3. Submit from editor (`POST /api/projects/student/assignments/:assignmentId/submit`)
-4. Track grades, feedback, badges, leaderboard, and analytics
+### 1) Role-based access and dashboards
+- Secure JWT authentication with role-based route protection.
+- Dedicated dashboards for Director, Teacher, and Student.
+- Protected frontend routes using role checks.
 
-### 4) Director flow
-1. Create/manage users (`/api/auth/create-user`, `/api/auth/users/:userId`)
-2. Bulk import users (`POST /api/bulk/import-users`)
-3. Review institution stats (`/api/projects/director/stats`, `/api/projects/all`)
-4. Analyze performance by department/course and export CSV reports
+### 2) Authentication and account lifecycle
+- Login and logout.
+- Student self-registration.
+- Director registration with access-code verification.
+- Password reset flow (`forgot-password` and token-based reset).
+- Access token refresh using refresh tokens.
 
-## Filters and views (curated)
+### 3) Teacher features
+- Create projects with due dates, marks, subject, and requirements.
+- Assign projects to selected students (with duplicate-assignment protection).
+- View project submission status (assigned/submitted/graded).
+- Grade submissions with marks and teacher feedback.
+- Reports view for project progress.
 
-### Student Dashboard
-- Search: title, subject, teacher, department
-- Status: `assigned`, `in_progress`, `submitted`, `graded`
-- Subject dropdown (dynamic)
-- Sort: due soon, due late, newest
+### 4) Student features
+- View personal assignments with status tracking.
+- Search, filter, and sort assignments by status/subject/deadline.
+- Submit code and text responses from an integrated editor.
+- Resubmit work when allowed.
+- View marks, teacher feedback, and progress metrics.
 
-### Teacher - Student Selector
-- Search: name, email, department
-- Stream filter (derived from department)
-- Batch-wise grouped student selection
-- Actions: select visible, clear visible, assign visible
+### 5) Director features
+- Create teacher/student accounts.
+- Update and delete users.
+- Bulk user import via CSV and downloadable CSV template.
+- Institution-level stats and project visibility.
+- Department, teacher, student, and project analysis views.
+- CSV report export from dashboard views.
 
-### Teacher - Submission Review
-- Search: student name/email/department
-- Status filter: not started, in progress, pending review, graded
-- Department filter
-- Language filter (auto-detected or saved)
-- Sort: latest/oldest, marks high-low, student name A-Z
+### 6) Analytics and leaderboard
+- Student analytics endpoint.
+- Teacher analytics endpoint.
+- Director analytics endpoint.
+- Leaderboard scopes: overall, course, and section.
+- My-rank endpoint for logged-in users.
 
-### Leaderboard
-- Scope tabs: `Overall`, `My Course`, `My Section`
-- Backend query filters: `course`, `section`, `limit`
-- Points formula: `(averageScore * gradedAssignments) + (badges * 10)`
+### 7) Badges and notifications
+- Teacher badge awarding.
+- Automatic badge checks after grading.
+- In-app notifications (read, read-all, delete).
+- Email notifications for assignment and grading events.
 
-### Director Dashboard
-- Global search for teachers/students/projects
-- Department filter across datasets
-- Project status filter: `active`, `completed`, `draft`, `archived`
-- Chart-driven drill-down by department
+### 8) Code execution support
+- JDoodle-backed code execution API.
+- Execution credits endpoint.
+- Per-student daily run quota tracking (`STUDENT_DAILY_RUN_LIMIT`, default 5).
+
+### 9) Profile and media support
+- Fetch own profile and view other user profiles (role-limited).
+- Upload/remove profile photo.
+- Extended academic and personal profile fields supported in backend model logic.
+
+### 10) Security and platform hardening
+- Helmet security headers.
+- CORS allowlist based on `CLIENT_URL`.
+- API and auth rate limiters.
+- Request payload size limits.
+- Safe error responses without stack leakage.
 
 ## Tech Stack
-- Frontend: React + Vite + Axios + Chart.js + Monaco Editor
-- Backend: Node.js + Express + Sequelize
-- Database: PostgreSQL
-- Auth: JWT
-- Notifications: DB notifications + email
-- Code execution: JDoodle API
+
+### Frontend
+- React 19
+- Vite (Rolldown Vite)
+- React Router
+- Axios
+- Chart.js + react-chartjs-2
+- Monaco Editor
+
+### Backend
+- Node.js + Express
+- Sequelize ORM
+- PostgreSQL
+- JWT auth
+- SendGrid/Nodemailer + AWS SDK integrations (optional)
 
 ## Project Structure
+
 ```text
 edutrack/
   backend/
+    app.js
+    server.js
+    config/
     controllers/
-    routes/
+    middleware/
     models/
+    routes/
     services/
   frontend/
-    src/components/
-    src/services/
+    src/
+      components/
+      services/
+      hooks/
+      utils/
 ```
 
-## API Map
+## API Overview
 
-### Auth
-- `POST /api/auth/register` (student self-register)
-- `POST /api/auth/register-director`
-- `POST /api/auth/login`
-- `POST /api/auth/create-user` (director)
-- `GET /api/auth/students`
-- `GET /api/auth/all-users` (director)
+### Auth (`/api/auth`)
+- `POST /register`
+- `POST /register-director`
+- `POST /verify-access-code`
+- `POST /login`
+- `POST /forgot-password`
+- `POST /reset-password/:token`
+- `POST /refresh-token`
+- `POST /logout`
+- `GET /me`
+- `POST /create-user` (director)
+- `PUT /users/:userId` (director)
+- `DELETE /users/:userId` (director)
+- `GET /students` (teacher/director)
+- `GET /all-users` (director)
 
-### Projects
-- `GET /api/projects/stats` (teacher)
-- `GET /api/projects/my-projects` (teacher)
-- `POST /api/projects`
-- `POST /api/projects/:projectId/assign`
-- `GET /api/projects/:projectId/submissions`
-- `PUT /api/projects/submissions/:submissionId/grade`
-- `GET /api/projects/student/my-assignments` (student)
-- `POST /api/projects/student/assignments/:assignmentId/submit` (student)
-- `GET /api/projects/director/stats` (director)
-- `GET /api/projects/all` (director)
-- `POST /api/projects/execute`
-- `GET /api/projects/execute/credits`
+### Projects (`/api/projects`)
+- `GET /stats` (teacher)
+- `GET /my-projects` (teacher)
+- `POST /` (teacher)
+- `POST /:projectId/assign` (teacher)
+- `GET /:projectId/submissions` (teacher)
+- `PUT /submissions/:submissionId/grade` (teacher)
+- `GET /student/my-assignments` (student)
+- `POST /student/assignments/:assignmentId/submit` (student)
+- `POST /execute`
+- `GET /execute/credits`
+- `GET /director/stats` (director)
+- `GET /all` (director)
 
 ### Other modules
 - Analytics: `/api/analytics/*`
@@ -120,36 +157,43 @@ edutrack/
 - Badges: `/api/badges/*`
 - Profile: `/api/profile/*`
 - Bulk import: `/api/bulk/*`
+- Health: `GET /api/health`
 
 ## Local Setup
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20.x
 - npm 9+
 - PostgreSQL 14+
 
-### 1) Clone and install
+### 1) Install dependencies
 ```bash
-git clone <your-repo-url>
-cd edutrack
-
 cd backend
 npm install
-copy .env.example .env
 
-cd ..\frontend
+cd ../frontend
 npm install
-copy .env.example .env
 ```
 
-### 2) Configure backend env (`backend/.env`)
-Set values for:
-- DB: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- JWT: `JWT_SECRET`, `JWT_EXPIRES_IN`
-- App: `CLIENT_URL`, `DIRECTOR_ACCESS_CODE`
-- Optional integrations: SendGrid/AWS/JDoodle credentials
+### 2) Configure environment files
+Create and fill:
+- `backend/.env` from `backend/.env.example`
+- `frontend/.env` from `frontend/.env.example`
 
-### 3) Start apps
+#### Backend important variables
+- Server: `PORT`, `NODE_ENV`
+- DB: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- JWT: `JWT_SECRET`, `JWT_EXPIRES_IN`, `REFRESH_TOKEN_TTL_DAYS`
+- App: `CLIENT_URL`, `DIRECTOR_ACCESS_CODE`
+- JDoodle: `JDOODLE_CLIENT_ID`, `JDOODLE_CLIENT_SECRET`
+- Optional: SendGrid/AWS/email settings
+- Optional run limit: `STUDENT_DAILY_RUN_LIMIT`
+
+#### Frontend variables
+- `VITE_API_URL`
+- Optional JDoodle vars if needed by your frontend usage
+
+### 3) Run the app
 ```bash
 # terminal 1
 cd backend
@@ -160,12 +204,21 @@ cd frontend
 npm run dev
 ```
 
-- Backend: `http://localhost:5000`
-- Health: `http://localhost:5000/api/health`
+### Local URLs
+- Backend API: `http://localhost:5000`
+- Health endpoint: `http://localhost:5000/api/health`
 - Frontend: `http://localhost:5173`
-- API base (frontend): `http://localhost:5000/api`
 
-## Quality checks
+## Typical Workflow
+
+1. Director creates teacher/student users (single or bulk CSV).
+2. Teacher creates projects and assigns students.
+3. Students submit work (including code execution/testing).
+4. Teacher grades submissions and provides feedback.
+5. System updates badges, notifications, leaderboard, and analytics.
+6. Director monitors institutional performance and exports reports.
+
+## Quality Checks
 
 ### Backend
 - `npm run dev`
@@ -178,13 +231,16 @@ npm run dev
 - `npm run lint`
 
 ## Troubleshooting
-- DB connection errors: verify PostgreSQL service and `DB_*` credentials
-- CORS blocked: ensure frontend URL is in `CLIENT_URL`
-- 401 loops: token may be expired; re-login clears local token state
-- Code execution fails: verify `JDOODLE_CLIENT_ID` and `JDOODLE_CLIENT_SECRET`
 
-## Roadmap Ideas
-- Pagination for leaderboard and notifications
-- More advanced analytics filters (date range, semester, department)
-- WebSocket live updates for grading and notifications
-- Automated test coverage for critical API paths
+- Database connection issues: verify PostgreSQL is running and `DB_*` values are correct.
+- CORS errors: ensure `CLIENT_URL` includes your frontend origin(s), comma-separated.
+- Authentication loops: clear old tokens and login again.
+- Email not sending: verify SendGrid/SMTP credentials.
+- Code execution failures: verify JDoodle credentials and daily run limits.
+
+## Future Enhancements
+
+- WebSocket real-time updates for grading and notifications.
+- Advanced analytics filters (date/semester/session).
+- More automated tests for critical API and dashboard flows.
+- Pagination and archival controls for large datasets.
