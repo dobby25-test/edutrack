@@ -244,3 +244,124 @@ npm run dev
 - Advanced analytics filters (date/semester/session).
 - More automated tests for critical API and dashboard flows.
 - Pagination and archival controls for large datasets.
+
+## Screenshots
+
+Add your product screenshots in this section for quick project preview.
+
+Suggested images:
+- Login page
+- Student dashboard
+- Teacher dashboard
+- Director dashboard
+- Leaderboard / Notifications panel
+
+Example markdown:
+
+```md
+![Login](./docs/screenshots/login.png)
+![Student Dashboard](./docs/screenshots/student-dashboard.png)
+![Teacher Dashboard](./docs/screenshots/teacher-dashboard.png)
+![Director Dashboard](./docs/screenshots/director-dashboard.png)
+![Leaderboard](./docs/screenshots/leaderboard.png)
+```
+
+Tip: Create a `docs/screenshots/` folder and keep image file names lowercase with hyphens.
+
+## Demo Accounts
+
+Use separate demo users per role for local testing.
+
+```text
+Director
+  Email: director@demo.com
+  Password: Demo@123
+
+Teacher
+  Email: teacher@demo.com
+  Password: Demo@123
+
+Student
+  Email: student@demo.com
+  Password: Demo@123
+```
+
+Notes:
+- Passwords must satisfy the backend policy (uppercase, lowercase, number, symbol, minimum length).
+- You can create these users from Director dashboard or via API.
+- Do not use demo credentials in production.
+
+## Deployment
+
+This project is split into two deployable apps:
+- Frontend (Vite/React)
+- Backend (Node/Express API)
+
+### 1) Backend deployment checklist
+
+Set these environment variables in your backend hosting platform:
+- `NODE_ENV=production`
+- `PORT`
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- `JWT_SECRET`, `JWT_EXPIRES_IN`, `REFRESH_TOKEN_TTL_DAYS`
+- `CLIENT_URL` (frontend domain; comma-separate multiple allowed origins)
+- `DIRECTOR_ACCESS_CODE`
+- `JDOODLE_CLIENT_ID`, `JDOODLE_CLIENT_SECRET`
+- Optional email vars: `SENDGRID_API_KEY`, `FROM_EMAIL`, `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM`
+- Optional storage vars: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_S3_BUCKET`
+- Optional quota: `STUDENT_DAILY_RUN_LIMIT`
+
+Backend post-deploy validation:
+- `GET /api/health` returns success
+- CORS allows your frontend domain
+- Database connection is successful
+
+### 2) Frontend deployment checklist
+
+Set frontend env:
+- `VITE_API_URL=https://<your-backend-domain>/api`
+
+Frontend post-deploy validation:
+- Login works
+- Role routes (`/student`, `/teacher`, `/director`) load correctly
+- API calls resolve to the deployed backend
+
+### 3) Vercel notes (if using Vercel)
+
+- Keep frontend and backend as separate Vercel projects.
+- Configure env vars per project (Production/Preview/Development as needed).
+- Ensure frontend `VITE_API_URL` points to backend production URL.
+- Ensure backend `CLIENT_URL` includes frontend production origin.
+
+## Contributing
+
+Contributions are welcome. Keep changes focused, tested, and documented.
+
+### Workflow
+
+1. Fork or create a feature branch from `main`.
+2. Use clear branch names, for example:
+   - `feature/director-user-filters`
+   - `fix/auth-refresh-token`
+   - `docs/readme-update`
+3. Make scoped commits with descriptive messages.
+4. Run checks before opening a PR.
+5. Open a pull request with summary, screenshots (if UI change), and test notes.
+
+### Recommended pre-PR checks
+
+Backend:
+- `npm run dev` starts without runtime errors.
+
+Frontend:
+- `npm run lint`
+- `npm run build`
+- `npm run dev` for manual UI sanity checks.
+
+### Pull Request checklist
+
+- Explain what changed and why.
+- Mention impacted roles (Director/Teacher/Student).
+- Add API updates to README when routes change.
+- Add screenshots for UI changes.
+- Confirm no secrets are committed.
