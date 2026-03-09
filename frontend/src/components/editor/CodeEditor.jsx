@@ -200,7 +200,7 @@ export default function CodeEditor({
 
   // Check credits on mount
   useEffect(() => {
-    checkCredits().then(data => setCredits(data.used)).catch(() => {});
+    checkCredits().then(data => setCredits(data)).catch(() => {});
   }, []);
 
   const handleLangChange = (id) => {
@@ -220,7 +220,7 @@ export default function CodeEditor({
       const out = await runCode(code, language, stdin, setRunStatus);
       setResult(out);
       // Refresh credits after run
-      checkCredits().then(data => setCredits(data.used)).catch(() => {});
+      checkCredits().then(data => setCredits(data)).catch(() => {});
     } catch (err) {
       setResult({ success:false, output:'', error:err.message||'Execution failed.', statusCode:1 });
     } finally { setRunning(false); setRunStatus(''); }
@@ -276,8 +276,12 @@ export default function CodeEditor({
               </span>
             )}
             <span className="jdoodle-badge">JDoodle API</span>
-            {credits!==null && (
-              <span className="credits-badge">{credits}/200 used today</span>
+            {credits && (
+              <span className="credits-badge">
+                {credits.scope === 'student_daily'
+                  ? `${credits.used}/${credits.limit} runs today`
+                  : `${credits.used}/${credits.limit} used today`}
+              </span>
             )}
           </div>
           <span className="ed-marks">/{maxMarks} marks</span>
@@ -383,7 +387,7 @@ export default function CodeEditor({
             <div className="ed-bottom-toggles">
               {showStdinField && (
                 <button className="ed-toggle" onClick={()=>setShowStdin(s=>!s)}>
-                  {showStdin?'Hide':'Show'} stdin {stdin&&<span className="ed-dot"/>}
+                  {showStdin ? 'Hide' : 'Show'} run input (stdin) {stdin&&<span className="ed-dot"/>}
                 </button>
               )}
               {showCommentsField && (
@@ -396,7 +400,7 @@ export default function CodeEditor({
 
             {showStdinField && showStdin && (
               <textarea className="ed-textarea" value={stdin} onChange={e=>setStdin(e.target.value)}
-                placeholder="Program input (stdin) - one value per line..." rows={3}
+                placeholder="Used only for Run Code. Not sent in Submit. Enter input values line by line..." rows={3}
                 style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12}} />
             )}
             {showCommentsField && showComments && (

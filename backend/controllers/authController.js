@@ -121,7 +121,9 @@ const sanitizeUserResponse = (user) => ({
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (email) => typeof email === 'string' && EMAIL_RE.test(email) && email.length <= 254;
 const isValidName = (name) => typeof name === 'string' && name.trim().length >= 2 && name.trim().length <= 100;
-const isValidPassword = (password) => typeof password === 'string' && password.length >= 8 && password.length <= 128;
+const PASSWORD_POLICY_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,128}$/;
+// ✅ SECURITY FIX: Enforce strong password complexity for registration/reset.
+const isValidPassword = (password) => typeof password === 'string' && PASSWORD_POLICY_RE.test(password);
 const secureEquals = (a, b) => {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
   const aBuf = Buffer.from(a);
@@ -161,7 +163,7 @@ const register = async (req, res) => {
     }
 
     if (!isValidPassword(password)) {
-      return res.status(400).json({ success: false, message: 'Password must be 8 to 128 characters' });
+      return res.status(400).json({ success: false, message: 'Password must be 8-128 chars and include upper/lowercase, number, and symbol' });
     }
 
     if (normalizedRole !== 'student') {
@@ -198,8 +200,7 @@ const register = async (req, res) => {
     console.error('Register error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Server error during registration',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -227,7 +228,7 @@ const createUserByDirector = async (req, res) => {
     }
 
     if (!isValidPassword(password)) {
-      return res.status(400).json({ success: false, message: 'Password must be 8 to 128 characters' });
+      return res.status(400).json({ success: false, message: 'Password must be 8-128 chars and include upper/lowercase, number, and symbol' });
     }
 
     if (!['student', 'teacher'].includes(normalizedRole)) {
@@ -265,8 +266,7 @@ const createUserByDirector = async (req, res) => {
     console.error('Create user error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Server error while creating user',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -324,8 +324,7 @@ const login = async (req, res) => {
     console.error('Login error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Server error during login',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -343,7 +342,7 @@ const getMe = async (req, res) => {
     return res.json({ success: true, user: sanitizeUserResponse(user) });
   } catch (error) {
     console.error('Get user error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -366,7 +365,7 @@ const getAllStudents = async (req, res) => {
     return res.json({ success: true, count: students.length, students });
   } catch (error) {
     console.error('Get students error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to fetch students' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -381,7 +380,7 @@ const getAllUsers = async (req, res) => {
     return res.json({ success: true, count: users.length, users });
   } catch (error) {
     console.error('Get all users error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to fetch users' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -416,7 +415,7 @@ const forgotPassword = async (req, res) => {
     return res.json({ success: true, message: 'If that email exists, a reset link was sent.' });
   } catch (error) {
     console.error('Forgot password error:', error);
-    return res.status(500).json({ success: false, message: 'Something went wrong.' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -426,7 +425,7 @@ const resetPassword = async (req, res) => {
     const { password } = req.body;
 
     if (!isValidPassword(password)) {
-      return res.status(400).json({ success: false, message: 'Password must be 8 to 128 characters.' });
+      return res.status(400).json({ success: false, message: 'Password must be 8-128 chars and include upper/lowercase, number, and symbol' });
     }
 
     const normalizedToken = decodeURIComponent((token || '').trim());
@@ -452,7 +451,7 @@ const resetPassword = async (req, res) => {
     return res.json({ success: true, message: 'Password reset successfully.' });
   } catch (error) {
     console.error('Reset password error:', error);
-    return res.status(500).json({ success: false, message: 'Something went wrong.' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -474,7 +473,7 @@ const verifyAccessCode = async (req, res) => {
 
     const validCode = process.env.DIRECTOR_ACCESS_CODE;
     if (!validCode) {
-      return res.status(500).json({ success: false, message: 'Access code system not configured' });
+      return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
     }
 
     if (!secureEquals(String(accessCode).trim(), validCode)) {
@@ -484,7 +483,7 @@ const verifyAccessCode = async (req, res) => {
     return res.json({ success: true, message: 'Access code verified successfully' });
   } catch (error) {
     console.error('Verify access code error:', error);
-    return res.status(500).json({ success: false, message: 'Verification failed' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -506,7 +505,7 @@ const registerDirector = async (req, res) => {
 
     const validCode = process.env.DIRECTOR_ACCESS_CODE;
     if (!validCode) {
-      return res.status(500).json({ success: false, message: 'Access code system not configured' });
+      return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
     }
 
     if (!normalizedAccessCode || !secureEquals(normalizedAccessCode, validCode)) {
@@ -529,7 +528,7 @@ const registerDirector = async (req, res) => {
     }
 
     if (!isValidPassword(password)) {
-      return res.status(400).json({ success: false, message: 'Password must be 8 to 128 characters' });
+      return res.status(400).json({ success: false, message: 'Password must be 8-128 chars and include upper/lowercase, number, and symbol' });
     }
 
     const exists = await User.findOne({ where: { email: normalizedEmail } });
@@ -561,7 +560,7 @@ const registerDirector = async (req, res) => {
     });
   } catch (error) {
     console.error('Register director error:', error);
-    return res.status(500).json({ success: false, message: 'Registration failed' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -622,7 +621,7 @@ const updateUser = async (req, res) => {
       const firstError = error.errors?.[0]?.message || 'Duplicate value found';
       return res.status(409).json({ success: false, message: firstError });
     }
-    return res.status(500).json({ success: false, message: 'Failed to update user' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -651,7 +650,7 @@ const deleteUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Delete user error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to delete user' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -685,7 +684,7 @@ const refreshAccessToken = async (req, res) => {
     });
   } catch (error) {
     console.error('Refresh token error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to refresh token' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -704,7 +703,7 @@ const logout = async (req, res) => {
     return res.json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     console.error('Logout error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to logout' });
+    return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 

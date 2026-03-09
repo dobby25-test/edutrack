@@ -1,4 +1,4 @@
-const { Project, Assignment, User, Submission } = require('../models');
+const { Project, Assignment, User, Submission, ExecutionUsage } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
 const { checkAndAwardAutomaticBadges } = require('./badgeController');
@@ -28,7 +28,43 @@ const SUPPORTED_SUBMISSION_LANGUAGES = new Set([
   ...Object.keys(JDOODLE_LANGUAGE_MAP),
   'html'
 ]);
-const devError = (error) => (process.env.NODE_ENV === 'development' ? error.message : undefined);
+const STUDENT_DAILY_RUN_LIMIT = Number(process.env.STUDENT_DAILY_RUN_LIMIT) || 5;
+
+const getTodayDateOnly = () => new Date().toISOString().slice(0, 10);
+
+const consumeStudentExecutionQuota = async (userId) => {
+  const usageDate = getTodayDateOnly();
+  let usageState = { used: 0, remaining: STUDENT_DAILY_RUN_LIMIT, limit: STUDENT_DAILY_RUN_LIMIT };
+
+  await sequelize.transaction(async (transaction) => {
+    const [row] = await ExecutionUsage.findOrCreate({
+      where: { userId, usageDate },
+      defaults: { userId, usageDate, runCount: 0 },
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+
+    if (row.runCount >= STUDENT_DAILY_RUN_LIMIT) {
+      throw Object.assign(new Error(`Run limit reached. Max ${STUDENT_DAILY_RUN_LIMIT} runs per day.`), {
+        statusCode: 429,
+        used: row.runCount,
+        remaining: 0,
+        limit: STUDENT_DAILY_RUN_LIMIT
+      });
+    }
+
+    row.runCount += 1;
+    await row.save({ transaction });
+
+    usageState = {
+      used: row.runCount,
+      remaining: Math.max(STUDENT_DAILY_RUN_LIMIT - row.runCount, 0),
+      limit: STUDENT_DAILY_RUN_LIMIT
+    };
+  });
+
+  return usageState;
+};
 
 const getJdoodleCredentials = () => {
   const clientId = process.env.JDOODLE_CLIENT_ID || '';
@@ -67,8 +103,7 @@ const createProject = async (req, res) => {
     console.error('Create project error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create project',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -192,8 +227,7 @@ const assignProject = async (req, res) => {
     console.error('Assign project error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to assign project',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -247,8 +281,7 @@ const getMyProjects = async (req, res) => {
     console.error('Get projects error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch projects',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -301,8 +334,7 @@ const getProjectSubmissions = async (req, res) => {
     console.error('Get submissions error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch submissions',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -396,7 +428,7 @@ const gradeSubmission = async (req, res) => {
     });
   } catch (error) {
     console.error('Grade submission error:', error);
-    res.status(500).json({ success: false, message: 'Failed to grade submission' });
+    res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -447,8 +479,7 @@ const getTeacherStats = async (req, res) => {
     console.error('Get stats error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch statistics',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -486,8 +517,7 @@ const getStudentAssignments = async (req, res) => {
     console.error('Get student assignments error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch assignments',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -583,8 +613,7 @@ const submitAssignment = async (req, res) => {
     console.error('Submit assignment error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to submit assignment',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -622,8 +651,7 @@ const getAllProjects = async (req, res) => {
     console.error('Get all projects error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch projects',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
@@ -656,7 +684,7 @@ const getDirectorStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Director stats error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch stats' });
+    res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -710,7 +738,7 @@ const getAllProjectsEnhanced = async (req, res) => {
     res.json({ success: true, count: result.length, projects: result });
   } catch (error) {
     console.error('Get all projects error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch projects' });
+    res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
   }
 };
 
@@ -739,8 +767,13 @@ const executeCode = async (req, res) => {
     if (!clientId || !clientSecret) {
       return res.status(500).json({
         success: false,
-        message: 'JDoodle credentials missing on backend. Set JDOODLE_CLIENT_ID and JDOODLE_CLIENT_SECRET in backend/.env'
+        message: 'An error occurred. Please try again later.'
       });
+    }
+
+    let usage = null;
+    if (req.user?.role === 'student') {
+      usage = await consumeStudentExecutionQuota(req.user.id);
     }
 
     const response = await fetch(JDOODLE_EXECUTE_URL, {
@@ -767,8 +800,7 @@ const executeCode = async (req, res) => {
     if (!response.ok) {
       return res.status(response.status).json({
         success: false,
-        message: data.error || data.output || 'JDoodle execution failed',
-        details: data
+        message: data.error || data.output || 'Code execution failed'
       });
     }
 
@@ -781,25 +813,54 @@ const executeCode = async (req, res) => {
       error: success ? '' : (data.output || data.error || 'Execution failed'),
       memory: data.memory ?? null,
       cpuTime: data.cpuTime ?? null,
-      statusCode
+      statusCode,
+      usage
     });
   } catch (error) {
+    if (error?.statusCode === 429) {
+      return res.status(429).json({
+        success: false,
+        message: error.message,
+        usage: {
+          used: Number(error.used) || STUDENT_DAILY_RUN_LIMIT,
+          remaining: Number(error.remaining) || 0,
+          limit: Number(error.limit) || STUDENT_DAILY_RUN_LIMIT
+        }
+      });
+    }
+
     console.error('Execute code error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to execute code',
-      error: devError(error)
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
 
-const getExecutionCredits = async (_req, res) => {
+const getExecutionCredits = async (req, res) => {
   try {
+    if (req.user?.role === 'student') {
+      const usageDate = getTodayDateOnly();
+      const row = await ExecutionUsage.findOne({
+        where: { userId: req.user.id, usageDate },
+        attributes: ['runCount']
+      });
+
+      const used = Number(row?.runCount) || 0;
+      return res.json({
+        success: true,
+        used,
+        remaining: Math.max(STUDENT_DAILY_RUN_LIMIT - used, 0),
+        limit: STUDENT_DAILY_RUN_LIMIT,
+        scope: 'student_daily'
+      });
+    }
+
     const { clientId, clientSecret } = getJdoodleCredentials();
     if (!clientId || !clientSecret) {
       return res.status(500).json({
         success: false,
-        message: 'JDoodle credentials missing on backend',
+        message: 'An error occurred. Please try again later.',
         used: 0
       });
     }
@@ -821,7 +882,7 @@ const getExecutionCredits = async (_req, res) => {
     if (!response.ok) {
       return res.status(response.status).json({
         success: false,
-        message: 'Failed to fetch JDoodle credits',
+        message: 'An error occurred. Please try again later.',
         used: Number(data.used) || 0
       });
     }
@@ -834,7 +895,7 @@ const getExecutionCredits = async (_req, res) => {
     console.error('Get execution credits error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch execution credits',
+      message: 'An error occurred. Please try again later.',
       used: 0
     });
   }
@@ -854,4 +915,5 @@ module.exports = {
   executeCode,
   getExecutionCredits
 };
+
 

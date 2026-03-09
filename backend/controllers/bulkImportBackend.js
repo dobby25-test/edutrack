@@ -173,10 +173,11 @@ const bulkImportUsers = async (req, res) => {
           password: providedPassword ? 'provided' : password
         });
       } catch (error) {
+        console.error(`Bulk import row ${rowNum} error:`, error);
         results.failed.push({
           row: rowNum,
           email: payload.email || 'N/A',
-          reason: error.message
+          reason: 'Invalid user data'
         });
       }
     }
@@ -198,8 +199,7 @@ const bulkImportUsers = async (req, res) => {
     console.error('Bulk import error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Bulk import failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'An error occurred. Please try again later.'
     });
   }
 };

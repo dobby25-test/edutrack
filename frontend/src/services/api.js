@@ -1,10 +1,48 @@
 import axios from 'axios';
 
-// Base URL for your backend API
+// Base URL for backend API
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const TOKEN_KEY = 'token';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
+
+const getStorage = () => {
+  if (typeof window === 'undefined') return null;
+  return window.sessionStorage;
+};
+
+const clearLegacyLocalStorage = () => {
+  if (typeof window === 'undefined') return;
+  // ? SECURITY FIX: Remove legacy JWT persistence in localStorage.
+  window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+  window.localStorage.removeItem(USER_KEY);
+};
+
+const clearAuthState = () => {
+  const storage = getStorage();
+  storage?.removeItem(TOKEN_KEY);
+  storage?.removeItem(REFRESH_TOKEN_KEY);
+  storage?.removeItem(USER_KEY);
+  clearLegacyLocalStorage();
+};
+
+const getToken = () => {
+  clearLegacyLocalStorage();
+  return getStorage()?.getItem(TOKEN_KEY);
+};
+
+const getRefreshToken = () => {
+  clearLegacyLocalStorage();
+  return getStorage()?.getItem(REFRESH_TOKEN_KEY);
+};
+
+const setTokens = (token, refreshToken) => {
+  const storage = getStorage();
+  if (storage && token) storage.setItem(TOKEN_KEY, token);
+  if (storage && refreshToken) storage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  clearLegacyLocalStorage();
+};
 
 // Create axios instance
 const api = axios.create({
@@ -17,15 +55,13 @@ const api = axios.create({
 // Add token to requests automatically
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 let isRefreshing = false;
@@ -53,11 +89,9 @@ api.interceptors.response.use(
       || originalRequest?.url?.includes('/auth/refresh-token');
 
     if (status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      const refreshToken = getRefreshToken();
       if (!refreshToken) {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        clearAuthState();
         window.location.href = '/login';
         return Promise.reject(error);
       }
@@ -69,8 +103,8 @@ api.interceptors.response.use(
           if (!nextToken) {
             return Promise.reject(error);
           }
-            originalRequest.headers.Authorization = `Bearer ${nextToken}`;
-            return api(originalRequest);
+          originalRequest.headers.Authorization = `Bearer ${nextToken}`;
+          return api(originalRequest);
         });
       }
 
@@ -86,17 +120,14 @@ api.interceptors.response.use(
           throw new Error('Token refresh failed');
         }
 
-        localStorage.setItem(TOKEN_KEY, nextToken);
-        localStorage.setItem(REFRESH_TOKEN_KEY, nextRefreshToken);
+        setTokens(nextToken, nextRefreshToken);
         flushPending(nextToken, null);
 
         originalRequest.headers.Authorization = `Bearer ${nextToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         flushPending(null, refreshError);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        clearAuthState();
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {
@@ -109,3 +140,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+

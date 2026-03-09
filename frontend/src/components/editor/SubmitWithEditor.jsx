@@ -62,7 +62,21 @@ export default function SubmitWithEditor({ project, onClose, onSuccess }) {
       localStorage.removeItem(draftKey);
       onSuccess?.();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Submission failed. Try again.');
+      const apiMessage = err.response?.data?.message;
+      const apiError = err.response?.data?.error;
+      const status = err.response?.status;
+      const networkIssue = !err.response;
+
+      let nextError = apiMessage || err.message || 'Submission failed. Try again.';
+      if (networkIssue) {
+        nextError = 'Cannot reach backend API. Verify backend is running and VITE_API_URL is correct.';
+      } else if (apiError) {
+        nextError = `${nextError} (${apiError})`;
+      } else if (status && status >= 500) {
+        nextError = `${nextError} (server error ${status})`;
+      }
+
+      setError(nextError);
       throw err;
     }
   };

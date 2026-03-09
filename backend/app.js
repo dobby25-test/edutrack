@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
+const helmet = require('helmet');
 
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
@@ -15,34 +15,53 @@ const badgeRoutes = require('./routes/badges');
 const analyticsRoutes = require('./routes/analytics');
 const leaderboardRoutes = require('./routes/leaderboard');
 const notificationRoutes = require('./routes/notification');
+const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 let dbInitPromise;
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 25,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many authentication requests. Try again later.' }
-});
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many requests. Please slow down.' }
-});
-
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+const allowedOrigins = (process.env.CLIENT_URL || 'https://edutrack-frontend-tan.vercel.app,http://localhost:5173')
   .split(',')
-  .map((o) => o.trim())
+  .map((origin) => origin.trim())
   .filter(Boolean);
 
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    // ? SECURITY FIX: Enforce HTTPS behind proxy/load balancer in production.
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(`https://${req.header('host')}${req.url}`);
+    }
+    return next();
+  });
+}
+
+app.use(helmet({
+  // ? SECURITY FIX: Harden default security headers.
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'https://edutrack-steel.vercel.app']
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  frameguard: {
+    action: 'deny'
+  },
+  noSniff: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
+
 app.use(cors({
+  // ? SECURITY FIX: Restrict CORS to explicit trusted frontends only.
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
@@ -51,16 +70,9 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600
 }));
-
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  next();
-});
 
 app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true, limit: '8mb' }));
@@ -78,8 +90,9 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// ? SECURITY FIX: General API rate limiter.
 app.use('/api', apiLimiter);
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/bulk', bulkRoutes);
 app.use('/api/profile', profileRoutes);
@@ -91,7 +104,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route ${req.originalUrl} not found`
+    message: 'Resource not found'
   });
 });
 
@@ -110,11 +123,11 @@ app.use((err, _req, res, _next) => {
     });
   }
 
-  console.error(err.stack);
-  res.status(500).json({
+  console.error('Unhandled error:', err);
+  // ? SECURITY FIX: Never expose stack traces or internal error messages to clients.
+  return res.status(500).json({
     success: false,
-    message: 'Something went wrong',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: 'An error occurred. Please try again later.'
   });
 });
 
@@ -144,3 +157,4 @@ const ensureDatabaseReady = async () => {
 };
 
 module.exports = { app, ensureDatabaseReady };
+

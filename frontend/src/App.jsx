@@ -6,25 +6,7 @@ import StudentDashboard from './components/StudentDashboard';
 import TeacherDashboard from './components/TeacherDashboard';
 import DirectorDashboard from './components/DirectorDashboard';
 import LogoLoader from './components/shared/LogoLoader';
-import authService from './services/authService';
-
-function ProtectedRoute({ children, allowedRoles }) {
-  const isAuthenticated = authService.isAuthenticated();
-  const userRole = authService.getUserRole();
-
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (allowedRoles && !allowedRoles.includes(userRole)) return <Navigate to="/login" replace />;
-
-  return children;
-}
-
-function LandingPageRedirect() {
-  useEffect(() => {
-    window.location.replace('/landingpage.html');
-  }, []);
-
-  return null;
-}
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const [booting, setBooting] = useState(true);
@@ -47,7 +29,7 @@ function App() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         <Route
-          path="/student/dashboard"
+          path="/student/*"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentDashboard />
@@ -56,7 +38,7 @@ function App() {
         />
 
         <Route
-          path="/teacher/dashboard"
+          path="/teacher/*"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherDashboard />
@@ -65,7 +47,7 @@ function App() {
         />
 
         <Route
-          path="/director/dashboard"
+          path="/director/*"
           element={
             <ProtectedRoute allowedRoles={['director']}>
               <DirectorDashboard />
@@ -73,7 +55,8 @@ function App() {
           }
         />
 
-        <Route path="/" element={<LandingPageRedirect />} />
+        {/* ✅ SECURITY FIX: Avoid exposing any default public entry into protected app routes. */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

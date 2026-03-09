@@ -9,6 +9,7 @@ import { useNavigate, Link, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import authService from '../../services/authService';
 import useGlobalTheme from '../../hooks/useGlobalTheme';
+import { sanitizeInput, isValidEmail, validatePassword } from '../../utils/sanitize';
 
 function useAuthTheme() {
   const { theme, toggleTheme } = useGlobalTheme();
@@ -702,18 +703,28 @@ export function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const sanitizedEmail = sanitizeInput(form.email).toLowerCase();
+    const sanitizedPassword = sanitizeInput(form.password);
 
-    if (!form.email || !form.password) {
+    if (!sanitizedEmail || !sanitizedPassword) {
       setError('Please fill in all fields.');
+      return;
+    }
+    if (!isValidEmail(sanitizedEmail)) {
+      setError('Please enter a valid email address.');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await api.post('/auth/login', form);
-      const { token, user } = res.data;
+      const res = await api.post('/auth/login', {
+        email: sanitizedEmail,
+        password: sanitizedPassword
+      });
+      const { token, refreshToken, user } = res.data;
 
       authService.setToken(token);
+      if (refreshToken) authService.setRefreshToken(refreshToken);
       authService.setUser(user);
 
       // Role-based redirect
@@ -814,19 +825,29 @@ export function Register() {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
   const [fieldErrors, setFE]    = useState({});
+  const [passwordErrors, setPasswordErrors] = useState([]);
 
   const set = (k, v) => {
     setForm(f => ({ ...f, [k]: v }));
     setFE(fe => ({ ...fe, [k]: '' }));
+    if (k === 'password') {
+      const validation = validatePassword(v);
+      setPasswordErrors(validation.errors);
+    }
   };
 
   const validate = () => {
     const errs = {};
-    if (!form.name.trim())         errs.name     = true;
-    if (!form.email.includes('@')) errs.email    = true;
-    if (form.password.length < 6)  errs.password = true;
+    const safeName = sanitizeInput(form.name);
+    const safeEmail = sanitizeInput(form.email).toLowerCase();
+    const safeDepartment = sanitizeInput(form.department);
+    const passwordValidation = validatePassword(form.password);
+
+    if (!safeName) errs.name = true;
+    if (!isValidEmail(safeEmail)) errs.email = true;
+    if (!passwordValidation.isValid) errs.password = true;
     if (form.password !== form.confirmPassword) errs.confirmPassword = true;
-    if (!form.department.trim())   errs.department = true;
+    if (!safeDepartment) errs.department = true;
     return errs;
   };
 
@@ -843,12 +864,20 @@ export function Register() {
 
     setLoading(true);
     try {
-      const payload = { ...form };
+      const payload = {
+        ...form,
+        name: sanitizeInput(form.name),
+        email: sanitizeInput(form.email).toLowerCase(),
+        department: sanitizeInput(form.department),
+        password: sanitizeInput(form.password),
+        role: sanitizeInput(form.role).toLowerCase()
+      };
       delete payload.confirmPassword;
       const res = await api.post('/auth/register', payload);
-      const { token, user } = res.data;
+      const { token, refreshToken, user } = res.data;
 
       authService.setToken(token);
+      if (refreshToken) authService.setRefreshToken(refreshToken);
       authService.setUser(user);
 
       const routes = {
@@ -1008,6 +1037,12 @@ export function Register() {
                   </p>
                 </div>
               )}
+              {/* ✅ SECURITY FIX: Explicit password policy feedback before submit. */}
+              {passwordErrors.length > 0 && (
+                <div className="auth-error" style={{ marginBottom: '12px' }}>
+                  <span>!</span> {passwordErrors[0]}
+                </div>
+              )}
 
               <button type="submit" className="auth-btn" disabled={loading}>
                 {loading ? <span className="auth-spinner" /> : null}
@@ -1040,15 +1075,16 @@ export function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const safeEmail = sanitizeInput(email).toLowerCase();
 
-    if (!email.includes('@')) {
+    if (!isValidEmail(safeEmail)) {
       setError('Please enter a valid email address.');
       return;
     }
 
     setLoading(true);
     try {
-      await api.post('/auth/forgot-password', { email });
+      await api.post('/auth/forgot-password', { email: safeEmail });
       setSent(true);
     } catch {
       // Always show success to prevent email enumeration
@@ -1136,24 +1172,29 @@ export function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const safePassword = sanitizeInput(password);
+    const safeConfirm = sanitizeInput(confirmPassword);
+    const validation = validatePassword(safePassword);
+    setPasswordErrors(validation.errors);
 
-    if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (!validation.isValid) {
+      setError(validation.errors[0] || 'Password does not meet policy requirements.');
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (safePassword !== safeConfirm) {
       setError('Passwords do not match.');
       return;
     }
 
     setLoading(true);
     try {
-      await api.post(`/auth/reset-password/${token}`, { password });
+      await api.post(`/auth/reset-password/${token}`, { password: safePassword });
       setSuccess(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Reset link is invalid or expired.');
@@ -1193,7 +1234,11 @@ export function ResetPassword() {
                       className="field-input"
                       placeholder="Minimum 6 characters"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setPassword(next);
+                        setPasswordErrors(validatePassword(next).errors);
+                      }}
                       autoFocus
                     />
                   </div>
@@ -1208,6 +1253,11 @@ export function ResetPassword() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                     />
                   </div>
+                  {passwordErrors.length > 0 && (
+                    <div className="auth-error">
+                      <span>!</span> {passwordErrors[0]}
+                    </div>
+                  )}
 
                   <button type="submit" className="auth-btn" disabled={loading}>
                     {loading ? <span className="auth-spinner" /> : null}

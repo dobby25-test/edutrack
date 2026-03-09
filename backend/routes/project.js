@@ -16,16 +16,17 @@ const {
 } = require('../controllers/projectController');
 
 const { authenticateToken, checkRole } = require('../middleware/auth');
+const { validateProject, validateAssignmentSubmit } = require('../middleware/validation');
 
 router.get('/stats', authenticateToken, checkRole('teacher'), getTeacherStats);
 router.get('/my-projects', authenticateToken, checkRole('teacher'), getMyProjects);
-router.post('/', authenticateToken, checkRole('teacher'), createProject);
+router.post('/', authenticateToken, checkRole('teacher'), validateProject, createProject);
 router.post('/:projectId/assign', authenticateToken, checkRole('teacher'), assignProject);
 router.get('/:projectId/submissions', authenticateToken, checkRole('teacher'), getProjectSubmissions);
 router.put('/submissions/:submissionId/grade', authenticateToken, checkRole('teacher'), gradeSubmission);
 
 router.get('/student/my-assignments', authenticateToken, checkRole('student'), getStudentAssignments);
-router.post('/student/assignments/:assignmentId/submit', authenticateToken, checkRole('student'), submitAssignment);
+router.post('/student/assignments/:assignmentId/submit', authenticateToken, checkRole('student'), validateAssignmentSubmit, submitAssignment);
 router.post('/execute', authenticateToken, executeCode);
 router.get('/execute/credits', authenticateToken, getExecutionCredits);
 

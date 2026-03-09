@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import authService from '../../services/authService';
 import useGlobalTheme from '../../hooks/useGlobalTheme';
+import { sanitizeInput, isValidEmail, validatePassword } from '../../utils/sanitize';
 
 export default function DirectorSignup() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function DirectorSignup() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState([]);
 
   const setField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -29,15 +31,16 @@ export default function DirectorSignup() {
   const verifyAccessCode = async (event) => {
     event.preventDefault();
     setError('');
+    const safeAccessCode = sanitizeInput(form.accessCode).toUpperCase();
 
-    if (!form.accessCode.trim()) {
+    if (!safeAccessCode) {
       setError('Please enter access code');
       return;
     }
 
     setLoading(true);
     try {
-      await api.post('/auth/verify-access-code', { accessCode: form.accessCode.trim() });
+      await api.post('/auth/verify-access-code', { accessCode: safeAccessCode });
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid access code');
@@ -49,18 +52,35 @@ export default function DirectorSignup() {
   const handleRegister = async (event) => {
     event.preventDefault();
     setError('');
+    const safePayload = {
+      accessCode: sanitizeInput(form.accessCode).toUpperCase(),
+      collegeName: sanitizeInput(form.collegeName),
+      name: sanitizeInput(form.name),
+      email: sanitizeInput(form.email).toLowerCase(),
+      password: sanitizeInput(form.password),
+      confirmPassword: sanitizeInput(form.confirmPassword),
+      phone: sanitizeInput(form.phone),
+      address: sanitizeInput(form.address)
+    };
+    const passwordValidation = validatePassword(safePayload.password);
+    setPasswordErrors(passwordValidation.errors);
 
-    if (!form.collegeName || !form.name || !form.email || !form.password) {
+    if (!safePayload.collegeName || !safePayload.name || !safePayload.email || !safePayload.password) {
       setError('Please fill all required fields');
       return;
     }
 
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (!isValidEmail(safePayload.email)) {
+      setError('Please enter a valid email address');
       return;
     }
 
-    if (form.password !== form.confirmPassword) {
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errors[0] || 'Password does not meet policy requirements');
+      return;
+    }
+
+    if (safePayload.password !== safePayload.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
@@ -68,17 +88,18 @@ export default function DirectorSignup() {
     setLoading(true);
     try {
       const response = await api.post('/auth/register-director', {
-        accessCode: form.accessCode,
-        collegeName: form.collegeName,
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        phone: form.phone,
-        address: form.address
+        accessCode: safePayload.accessCode,
+        collegeName: safePayload.collegeName,
+        name: safePayload.name,
+        email: safePayload.email,
+        password: safePayload.password,
+        phone: safePayload.phone,
+        address: safePayload.address
       });
 
-      const { token, user } = response.data;
+      const { token, refreshToken, user } = response.data;
       authService.setToken(token);
+      if (refreshToken) authService.setRefreshToken(refreshToken);
       authService.setUser(user);
       navigate('/director/dashboard');
     } catch (err) {
@@ -133,10 +154,19 @@ export default function DirectorSignup() {
               <input type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
 
               <label>Password *</label>
-              <input type="password" value={form.password} onChange={(e) => setField('password', e.target.value)} />
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setField('password', next);
+                  setPasswordErrors(validatePassword(next).errors);
+                }}
+              />
 
               <label>Confirm Password *</label>
               <input type="password" value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} />
+              {passwordErrors.length > 0 ? <p className="ds-error">{passwordErrors[0]}</p> : null}
 
               <label>Phone</label>
               <input type="tel" value={form.phone} onChange={(e) => setField('phone', e.target.value)} />

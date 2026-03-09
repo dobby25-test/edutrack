@@ -70,8 +70,12 @@ export const checkCredits = async () => {
   try {
     const response = await api.get('/projects/execute/credits');
     const data = response.data || {};
-    return { used: Number(data.used) || 0 };
+    return {
+      used: Number(data.used) || 0,
+      limit: Number(data.limit) || 200,
+      scope: data.scope || 'jdoodle_global'
+    };
   } catch {
-    return { used: 0 };
+    return { used: 0, limit: 200, scope: 'jdoodle_global' };
   }
 };
