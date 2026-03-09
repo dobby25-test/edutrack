@@ -27,6 +27,24 @@ const allowedOrigins = (process.env.CLIENT_URL || 'https://edutrack-frontend-tan
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+const vercelPreviewRegex = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
+const vercelPreviewSupport = (process.env.ALLOW_VERCEL_PREVIEW_ORIGINS || 'true') === 'true';
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+
+  for (const configuredOrigin of allowedOrigins) {
+    if (configuredOrigin.startsWith('*.')) {
+      const suffix = configuredOrigin.slice(1).toLowerCase();
+      if (origin.toLowerCase().endsWith(suffix)) return true;
+    }
+  }
+
+  if (vercelPreviewSupport && vercelPreviewRegex.test(origin)) return true;
+  return false;
+};
+
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
     // ? SECURITY FIX: Enforce HTTPS behind proxy/load balancer in production.
@@ -63,8 +81,7 @@ app.use(helmet({
 app.use(cors({
   // ? SECURITY FIX: Restrict CORS to explicit trusted frontends only.
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,

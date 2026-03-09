@@ -122,7 +122,7 @@ export default function DirectorDashboard() {
     if (active !== 'projects') setStatus('all');
   }, [active]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [statsRes, projectsRes, usersRes] = await Promise.all([
@@ -177,9 +177,9 @@ export default function DirectorDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchProfileSnapshot = async () => {
+  const fetchProfileSnapshot = useCallback(async () => {
     try {
       const res = await api.get('/profile/me');
       const nextUser = res.data?.user;
@@ -189,12 +189,12 @@ export default function DirectorDashboard() {
     } catch (error) {
       console.error('Failed to fetch director profile snapshot:', error);
     }
-  };
+  }, [user?.name]);
 
   useEffect(() => {
     void load();
     void fetchProfileSnapshot();
-  }, []);
+  }, [load, fetchProfileSnapshot]);
 
   const bySearch = useCallback((arr, keys) => {
     const q = search.trim().toLowerCase();

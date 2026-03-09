@@ -1,7 +1,38 @@
 import axios from 'axios';
 
+const trimTrailingSlashes = (value = '') => String(value).replace(/\/+$/, '');
+
+const resolveApiUrl = () => {
+  const configuredApiUrl = trimTrailingSlashes(import.meta.env.VITE_API_URL || '');
+  if (configuredApiUrl) {
+    return configuredApiUrl;
+  }
+
+  if (typeof window === 'undefined') {
+    return 'http://localhost:5000/api';
+  }
+
+  const hostname = window.location.hostname || '';
+
+  if (
+    hostname === 'localhost'
+    || hostname === '127.0.0.1'
+    || hostname === '::1'
+  ) {
+    return 'http://localhost:5000/api';
+  }
+
+  const fallbackApiUrl = trimTrailingSlashes(import.meta.env.VITE_FALLBACK_API_URL || '');
+  if (fallbackApiUrl) {
+    return fallbackApiUrl;
+  }
+
+  // Production-safe fallback for environments where VITE_API_URL is missing.
+  return 'https://edutrack-steel.vercel.app/api';
+};
+
 // Base URL for backend API
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = resolveApiUrl();
 const TOKEN_KEY = 'token';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';

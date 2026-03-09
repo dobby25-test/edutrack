@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import authService from '../services/authService';
 import projectService from '../services/projectService';
 import api from '../services/api';
@@ -22,12 +22,7 @@ function StudentDashboard() {
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '');
   const [profileName, setProfileName] = useState(user?.name || 'Student');
 
-  useEffect(() => {
-    void fetchAssignments();
-    void fetchProfileSnapshot();
-  }, []);
-
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       setLoading(true);
       const data = await projectService.getMyAssignments();
@@ -37,9 +32,9 @@ function StudentDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchProfileSnapshot = async () => {
+  const fetchProfileSnapshot = useCallback(async () => {
     try {
       const res = await api.get('/profile/me');
       const nextUser = res.data?.user;
@@ -49,7 +44,12 @@ function StudentDashboard() {
     } catch (error) {
       console.error('Failed to fetch profile snapshot:', error);
     }
-  };
+  }, [user?.name]);
+
+  useEffect(() => {
+    void fetchAssignments();
+    void fetchProfileSnapshot();
+  }, [fetchAssignments, fetchProfileSnapshot]);
 
   const subjects = useMemo(() => {
     const uniqueSubjects = new Set();

@@ -5,7 +5,7 @@ EduTrack is a full-stack academic project and assignment platform for three role
 - Teacher
 - Student
 
-It manages the full classroom workflow from project creation to submission, grading, analytics, leaderboard ranking, badges, notifications, and profile management.
+It manages the full classroom workflow from project creation to submission, grading, analytics, leaderboard rokanking, badges, notifications, and profile management.
 
 ## What EduTrack Solves
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 import projectService from '../services/projectService';
@@ -30,12 +30,7 @@ function TeacherDashboard() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchDashboardData();
-    fetchProfileSnapshot();
-  }, []);
-
-  const fetchProfileSnapshot = async () => {
+  const fetchProfileSnapshot = useCallback(async () => {
     try {
       const res = await api.get('/profile/me');
       const nextUser = res.data?.user;
@@ -45,9 +40,9 @@ function TeacherDashboard() {
     } catch (error) {
       console.error('Failed to fetch teacher profile snapshot:', error);
     }
-  };
+  }, [user?.name]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       const [statsData, projectsData] = await Promise.all([
@@ -62,7 +57,12 @@ function TeacherDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchDashboardData();
+    void fetchProfileSnapshot();
+  }, [fetchDashboardData, fetchProfileSnapshot]);
 
   const handleLogout = () => {
     authService.logout();
