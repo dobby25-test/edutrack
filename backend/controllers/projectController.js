@@ -627,12 +627,6 @@ const submitAssignment = async (req, res) => {
           id: assignmentId,
           studentId: req.user.id
         },
-        include: [
-          {
-            model: Submission,
-            as: 'submission'
-          }
-        ],
         transaction,
         lock: transaction.LOCK.UPDATE
       });
@@ -648,7 +642,13 @@ const submitAssignment = async (req, res) => {
         );
       }
 
-      submission = assignment.submission;
+      stage = 'submit:load-submission';
+      submission = await Submission.findOne({
+        where: { assignmentId: assignment.id },
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+
       const nextPayload = {
         ...payload,
         language: payload.language || submission?.language || null

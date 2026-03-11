@@ -55,10 +55,11 @@ export const runCode = async (code, language, stdin = '', onStatus) => {
     };
   } catch (err) {
     const message = err.response?.data?.message || err.message || 'Execution failed';
+    const debugCode = err.response?.data?.debugCode;
     return {
       success: false,
       output: '',
-      error: message,
+      error: debugCode ? `${message} [${debugCode}]` : message,
       memory: null,
       cpuTime: null,
       statusCode: err.response?.status || 1

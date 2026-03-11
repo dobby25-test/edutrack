@@ -65,6 +65,7 @@ export default function SubmitWithEditor({ project, onClose, onSuccess }) {
       const isAxiosError = Boolean(err?.response);
       const apiMessage = err?.response?.data?.message || err?.message;
       const apiError = err?.response?.data?.error;
+      const debugCode = err?.response?.data?.debugCode;
       const status = err?.response?.status;
       const networkIssue = !isAxiosError && !apiMessage;
 
@@ -75,6 +76,9 @@ export default function SubmitWithEditor({ project, onClose, onSuccess }) {
         nextError = `${nextError} (${apiError})`;
       } else if (status && status >= 500) {
         nextError = `${nextError} (server error ${status})`;
+      }
+      if (debugCode) {
+        nextError = `${nextError} [${debugCode}]`;
       }
 
       setError(nextError);
