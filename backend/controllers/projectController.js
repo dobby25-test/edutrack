@@ -29,8 +29,41 @@ const SUPPORTED_SUBMISSION_LANGUAGES = new Set([
   'html'
 ]);
 const STUDENT_DAILY_RUN_LIMIT = Number(process.env.STUDENT_DAILY_RUN_LIMIT) || 5;
+const MISSING_COLUMN_RE = /column\s+"?([a-zA-Z0-9_]+)"?\s+of relation\s+"?([a-zA-Z0-9_]+)"?\s+does not exist/i;
+const MISSING_RELATION_RE = /relation\s+"?([a-zA-Z0-9_]+)"?\s+does not exist/i;
+
+const getDbErrorMessage = (error) => String(
+  error?.original?.message
+  || error?.parent?.message
+  || error?.message
+  || ''
+);
+
+const isMissingColumnError = (error, relationName, columnName) => {
+  if (error?.name !== 'SequelizeDatabaseError') return false;
+  const msg = getDbErrorMessage(error);
+  const match = msg.match(MISSING_COLUMN_RE);
+  if (!match) return false;
+  const [, missingColumn, missingRelation] = match;
+  const relationMatches = !relationName || missingRelation?.toLowerCase() === String(relationName).toLowerCase();
+  const columnMatches = !columnName || missingColumn?.toLowerCase() === String(columnName).toLowerCase();
+  return relationMatches && columnMatches;
+};
+
+const isMissingRelationError = (error, relationName) => {
+  if (error?.name !== 'SequelizeDatabaseError') return false;
+  const msg = getDbErrorMessage(error);
+  const match = msg.match(MISSING_RELATION_RE);
+  if (!match) return false;
+  const [, missingRelation] = match;
+  return !relationName || missingRelation?.toLowerCase() === String(relationName).toLowerCase();
+};
 
 const getTodayDateOnly = () => new Date().toISOString().slice(0, 10);
+const withDebug = (payload, debugCode) => ({
+  ...payload,
+  debugCode
+});
 
 const consumeStudentExecutionQuota = async (userId) => {
   const usageDate = getTodayDateOnly();
@@ -340,7 +373,9 @@ const getProjectSubmissions = async (req, res) => {
 };
 
 const gradeSubmission = async (req, res) => {
+  let stage = 'grade:init';
   try {
+    stage = 'grade:parse-input';
     const { submissionId } = req.params;
     const { marks, feedback, teacherFeedback } = req.body;
     const numericMarks = Number(marks);
@@ -351,6 +386,7 @@ const gradeSubmission = async (req, res) => {
         message: 'Valid marks are required'
       });
     }
+    stage = 'grade:load-submission';
     const submission = await Submission.findByPk(submissionId, {
       include: [
         {
@@ -383,20 +419,45 @@ const gradeSubmission = async (req, res) => {
       });
     }
 
-    await submission.update({
-      marks: numericMarks,
-      teacherFeedback: teacherFeedback ?? feedback ?? null,
-      status: 'graded',
-    });
-
-    await Assignment.update(
-      {
+    stage = 'grade:update-submission';
+    try {
+      await submission.update({
+        marks: numericMarks,
+        teacherFeedback: teacherFeedback ?? feedback ?? null,
         status: 'graded',
-        gradedAt: new Date()
-      },
-      { where: { id: submission.assignmentId } }
-    );
+      });
+    } catch (error) {
+      if (isMissingColumnError(error, 'submissions', 'teacherFeedback')) {
+        await submission.update({
+          marks: numericMarks,
+          status: 'graded'
+        });
+      } else {
+        throw error;
+      }
+    }
 
+    stage = 'grade:update-assignment';
+    try {
+      await Assignment.update(
+        {
+          status: 'graded',
+          gradedAt: new Date()
+        },
+        { where: { id: submission.assignmentId } }
+      );
+    } catch (error) {
+      if (isMissingColumnError(error, 'assignments', 'gradedAt')) {
+        await Assignment.update(
+          { status: 'graded' },
+          { where: { id: submission.assignmentId } }
+        );
+      } else {
+        throw error;
+      }
+    }
+
+    stage = 'grade:award-badges';
     // -- CHECK AND AWARD AUTOMATIC BADGES --
     const badgesAwarded = await checkAndAwardAutomaticBadges(
       submission,
@@ -405,6 +466,7 @@ const gradeSubmission = async (req, res) => {
 
 
 
+    stage = 'grade:notify-student';
     // -- SEND GRADE NOTIFICATION ----------------------------------------
     const student = submission.assignment.student;
     const project = submission.assignment.project;
@@ -420,6 +482,7 @@ const gradeSubmission = async (req, res) => {
 // Send grade notification email
     // ... existing email code ...
 
+    stage = 'grade:done';
     res.json({
       success: true,
       message: 'Submission graded successfully',
@@ -427,8 +490,11 @@ const gradeSubmission = async (req, res) => {
       badgesAwarded, // Return badges that were awarded
     });
   } catch (error) {
-    console.error('Grade submission error:', error);
-    res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
+    console.error(`[gradeSubmission] stage=${stage}`, error);
+    res.status(500).json(withDebug({
+      success: false,
+      message: 'An error occurred. Please try again later.'
+    }, `GRADE_FAIL_${stage}`));
   }
 };
 
@@ -523,12 +589,16 @@ const getStudentAssignments = async (req, res) => {
 };
 
 const submitAssignment = async (req, res) => {
+  let stage = 'submit:init';
   try {
+    stage = 'submit:parse-input';
     const { assignmentId } = req.params;
-    const { codeContent, studentComments, language } = req.body;
+    const { codeContent, code, studentComments, comments, language } = req.body;
 
-    const normalizedContent = typeof codeContent === 'string' ? codeContent.trim() : '';
-    const normalizedComments = typeof studentComments === 'string' ? studentComments.trim() : '';
+    const resolvedCode = codeContent ?? code;
+    const resolvedComments = studentComments ?? comments;
+    const normalizedContent = typeof resolvedCode === 'string' ? resolvedCode.trim() : '';
+    const normalizedComments = typeof resolvedComments === 'string' ? resolvedComments.trim() : '';
     const normalizedLanguage = typeof language === 'string' ? language.trim().toLowerCase() : '';
     const safeLanguage = SUPPORTED_SUBMISSION_LANGUAGES.has(normalizedLanguage)
       ? normalizedLanguage
@@ -542,14 +612,16 @@ const submitAssignment = async (req, res) => {
     }
 
     let submission;
-    const payload = {
-      codeContent: normalizedContent,
-      studentComments: normalizedComments || null,
-      language: safeLanguage || null,
-      status: 'submitted'
-    };
+      const payload = {
+        codeContent: normalizedContent,
+        studentComments: normalizedComments || null,
+        language: safeLanguage || null,
+        status: 'submitted'
+      };
 
+    stage = 'submit:transaction';
     await sequelize.transaction(async (transaction) => {
+      stage = 'submit:load-assignment';
       const assignment = await Assignment.findOne({
         where: {
           id: assignmentId,
@@ -582,21 +654,56 @@ const submitAssignment = async (req, res) => {
         language: payload.language || submission?.language || null
       };
 
-      if (submission) {
-        submission = await submission.update(nextPayload, { transaction });
-      } else {
-        submission = await Submission.create({
-          assignmentId: assignment.id,
-          ...nextPayload
-        }, { transaction });
+      stage = 'submit:upsert-submission';
+      try {
+        if (submission) {
+          submission = await submission.update(nextPayload, { transaction });
+        } else {
+          submission = await Submission.create({
+            assignmentId: assignment.id,
+            ...nextPayload
+          }, { transaction });
+        }
+      } catch (error) {
+        const shouldFallbackSubmissionFields =
+          isMissingColumnError(error, 'submissions', 'language')
+          || isMissingColumnError(error, 'submissions', 'studentComments');
+
+        if (!shouldFallbackSubmissionFields) {
+          throw error;
+        }
+
+        const safeLegacyPayload = {
+          codeContent: normalizedContent,
+          status: 'submitted'
+        };
+
+        if (submission) {
+          submission = await submission.update(safeLegacyPayload, { transaction });
+        } else {
+          submission = await Submission.create({
+            assignmentId: assignment.id,
+            ...safeLegacyPayload
+          }, { transaction });
+        }
       }
 
-      await assignment.update({
-        status: 'submitted',
-        submittedAt: new Date()
-      }, { transaction });
+      stage = 'submit:update-assignment-status';
+      try {
+        await assignment.update({
+          status: 'submitted',
+          submittedAt: new Date()
+        }, { transaction });
+      } catch (error) {
+        if (isMissingColumnError(error, 'assignments', 'submittedAt')) {
+          await assignment.update({ status: 'submitted' }, { transaction });
+        } else {
+          throw error;
+        }
+      }
     });
 
+    stage = 'submit:done';
     res.json({
       success: true,
       message: 'Assignment submitted successfully',
@@ -604,17 +711,25 @@ const submitAssignment = async (req, res) => {
     });
   } catch (error) {
     if (error?.statusCode) {
-      return res.status(error.statusCode).json({
+      return res.status(error.statusCode).json(withDebug({
         success: false,
         message: error.message
-      });
+      }, `SUBMIT_FAIL_${stage}`));
     }
 
-    console.error('Submit assignment error:', error);
-    res.status(500).json({
+    if (error?.name === 'SequelizeDatabaseError') {
+      console.error(`[submitAssignment] stage=${stage} db_error`, error);
+      return res.status(503).json(withDebug({
+        success: false,
+        message: 'Submission service is temporarily unavailable due to a database schema issue. Please contact support.'
+      }, `SUBMIT_DB_FAIL_${stage}`));
+    }
+
+    console.error(`[submitAssignment] stage=${stage}`, error);
+    res.status(500).json(withDebug({
       success: false,
       message: 'An error occurred. Please try again later.'
-    });
+    }, `SUBMIT_FAIL_${stage}`));
   }
 };
 
@@ -746,7 +861,9 @@ const getAllProjectsEnhanced = async (req, res) => {
 
 
 const executeCode = async (req, res) => {
+  let stage = 'execute:init';
   try {
+    stage = 'execute:parse-input';
     const { code, language, stdin = '' } = req.body || {};
     const trimmedCode = typeof code === 'string' ? code.trim() : '';
     const selectedLanguage = typeof language === 'string' ? language.trim().toLowerCase() : '';
@@ -755,6 +872,7 @@ const executeCode = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Code is required' });
     }
 
+    stage = 'execute:resolve-language';
     const langConfig = JDOODLE_LANGUAGE_MAP[selectedLanguage];
     if (!langConfig) {
       return res.status(400).json({
@@ -763,19 +881,35 @@ const executeCode = async (req, res) => {
       });
     }
 
+    stage = 'execute:validate-jdoodle-config';
     const { clientId, clientSecret } = getJdoodleCredentials();
     if (!clientId || !clientSecret) {
-      return res.status(500).json({
+      return res.status(503).json(withDebug({
         success: false,
-        message: 'An error occurred. Please try again later.'
-      });
+        message: 'Code execution is not configured on the server. Set JDOODLE_CLIENT_ID and JDOODLE_CLIENT_SECRET.'
+      }, 'EXECUTE_FAIL_MISSING_JDOODLE_CONFIG'));
     }
 
+    stage = 'execute:consume-quota';
     let usage = null;
     if (req.user?.role === 'student') {
-      usage = await consumeStudentExecutionQuota(req.user.id);
+      try {
+        usage = await consumeStudentExecutionQuota(req.user.id);
+      } catch (quotaError) {
+        if (quotaError?.statusCode === 429) {
+          throw quotaError;
+        }
+
+        if (isMissingRelationError(quotaError, 'execution_usages')) {
+          console.error('Execution quota table missing, continuing without quota tracking.');
+          usage = null;
+        } else {
+          throw quotaError;
+        }
+      }
     }
 
+    stage = 'execute:call-jdoodle';
     const response = await fetch(JDOODLE_EXECUTE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -789,6 +923,7 @@ const executeCode = async (req, res) => {
       })
     });
 
+    stage = 'execute:parse-jdoodle-response';
     const rawBody = await response.text();
     let data = {};
     try {
@@ -798,12 +933,13 @@ const executeCode = async (req, res) => {
     }
 
     if (!response.ok) {
-      return res.status(response.status).json({
+      return res.status(response.status).json(withDebug({
         success: false,
         message: data.error || data.output || 'Code execution failed'
-      });
+      }, `EXECUTE_FAIL_JDOODLE_HTTP_${response.status}`));
     }
 
+    stage = 'execute:done';
     const statusCode = data.statusCode ?? 1;
     const success = statusCode === 200;
 
@@ -818,7 +954,7 @@ const executeCode = async (req, res) => {
     });
   } catch (error) {
     if (error?.statusCode === 429) {
-      return res.status(429).json({
+      return res.status(429).json(withDebug({
         success: false,
         message: error.message,
         usage: {
@@ -826,14 +962,14 @@ const executeCode = async (req, res) => {
           remaining: Number(error.remaining) || 0,
           limit: Number(error.limit) || STUDENT_DAILY_RUN_LIMIT
         }
-      });
+      }, 'EXECUTE_FAIL_QUOTA_LIMIT'));
     }
 
-    console.error('Execute code error:', error);
-    return res.status(500).json({
+    console.error(`[executeCode] stage=${stage}`, error);
+    return res.status(500).json(withDebug({
       success: false,
       message: 'An error occurred. Please try again later.'
-    });
+    }, `EXECUTE_FAIL_${stage}`));
   }
 };
 
@@ -841,10 +977,17 @@ const getExecutionCredits = async (req, res) => {
   try {
     if (req.user?.role === 'student') {
       const usageDate = getTodayDateOnly();
-      const row = await ExecutionUsage.findOne({
-        where: { userId: req.user.id, usageDate },
-        attributes: ['runCount']
-      });
+      let row = null;
+      try {
+        row = await ExecutionUsage.findOne({
+          where: { userId: req.user.id, usageDate },
+          attributes: ['runCount']
+        });
+      } catch (error) {
+        if (!isMissingRelationError(error, 'execution_usages')) {
+          throw error;
+        }
+      }
 
       const used = Number(row?.runCount) || 0;
       return res.json({
@@ -858,9 +1001,9 @@ const getExecutionCredits = async (req, res) => {
 
     const { clientId, clientSecret } = getJdoodleCredentials();
     if (!clientId || !clientSecret) {
-      return res.status(500).json({
+      return res.status(503).json({
         success: false,
-        message: 'An error occurred. Please try again later.',
+        message: 'Code execution is not configured on the server. Set JDOODLE_CLIENT_ID and JDOODLE_CLIENT_SECRET.',
         used: 0
       });
     }

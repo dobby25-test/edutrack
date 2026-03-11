@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import CodeEditor from './CodeEditor';
-import api from '../../services/api';
+import projectService from '../../services/projectService';
 
 export default function SubmitWithEditor({ project, onClose, onSuccess }) {
   const [error, setError] = useState('');
@@ -53,7 +53,7 @@ export default function SubmitWithEditor({ project, onClose, onSuccess }) {
         throw new Error('Missing assignment id. Please refresh and try again.');
       }
 
-      await api.post(`/projects/student/assignments/${assignmentId}/submit`, {
+      await projectService.submitAssignment(assignmentId, {
         codeContent: code,
         studentComments: comments,
         language,
@@ -62,10 +62,11 @@ export default function SubmitWithEditor({ project, onClose, onSuccess }) {
       localStorage.removeItem(draftKey);
       onSuccess?.();
     } catch (err) {
-      const apiMessage = err.response?.data?.message;
-      const apiError = err.response?.data?.error;
-      const status = err.response?.status;
-      const networkIssue = !err.response;
+      const isAxiosError = Boolean(err?.response);
+      const apiMessage = err?.response?.data?.message || err?.message;
+      const apiError = err?.response?.data?.error;
+      const status = err?.response?.status;
+      const networkIssue = !isAxiosError && !apiMessage;
 
       let nextError = apiMessage || err.message || 'Submission failed. Try again.';
       if (networkIssue) {

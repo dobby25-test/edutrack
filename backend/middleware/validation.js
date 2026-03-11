@@ -97,11 +97,25 @@ const validateAssignmentSubmit = [
   param('assignmentId')
     .isInt({ min: 1 })
     .withMessage('Invalid assignment id'),
-  body('codeContent')
-    .trim()
-    .isLength({ min: 1, max: 50000 })
-    .withMessage('Code content is required and must be <= 50000 characters'),
+  body()
+    .custom((value, { req }) => {
+      const rawCode = req.body?.codeContent ?? req.body?.code;
+      const code = typeof rawCode === 'string' ? rawCode.trim() : '';
+      if (!code) {
+        throw new Error('Code content is required');
+      }
+      if (code.length > 50000) {
+        throw new Error('Code content must be <= 50000 characters');
+      }
+      return true;
+    }),
   body('studentComments')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Comments must be <= 2000 characters')
+    .escape(),
+  body('comments')
     .optional()
     .trim()
     .isLength({ max: 2000 })
