@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import authService from '../services/authService';
 import projectService from '../services/projectService';
 import api from '../services/api';
-import SubmitWithEditor from './editor/SubmitWithEditor';
 import StudentProfile from './student/Studentprofile';
 import LogoLoader from './shared/LogoLoader';
 import useGlobalTheme from '../hooks/useGlobalTheme';
 import './studentDashboard.css';
+
+const SubmitWithEditor = lazy(() => import('./editor/SubmitWithEditor'));
 
 function StudentDashboard() {
   const user = authService.getCurrentUser();
@@ -22,15 +23,15 @@ function StudentDashboard() {
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '');
   const [profileName, setProfileName] = useState(user?.name || 'Student');
 
-  const fetchAssignments = useCallback(async () => {
+  const fetchAssignments = useCallback(async ({ showLoader = false } = {}) => {
     try {
-      setLoading(true);
-      const data = await projectService.getMyAssignments();
+      if (showLoader) setLoading(true);
+      const data = await projectService.getMyAssignments({ page: 1, limit: 50 });
       setAssignments(data.assignments || []);
     } catch (error) {
       console.error('Failed to fetch assignments:', error);
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, []);
 
@@ -47,7 +48,7 @@ function StudentDashboard() {
   }, [user?.name]);
 
   useEffect(() => {
-    void fetchAssignments();
+    void fetchAssignments({ showLoader: true });
     void fetchProfileSnapshot();
   }, [fetchAssignments, fetchProfileSnapshot]);
 
@@ -270,9 +271,13 @@ function StudentDashboard() {
                         <button className="sd-button ghost" type="button" disabled>
                           Graded
                         </button>
+                      ) : assignment.status === 'submitted' ? (
+                        <button className="sd-button ghost" type="button" disabled>
+                          Submitted
+                        </button>
                       ) : (
                         <button className="sd-button" type="button" onClick={() => openSubmissionModal(assignment)}>
-                          {assignment.submission ? 'Edit & Resubmit' : 'Write & Submit'}
+                          Write & Submit
                         </button>
                       )}
                     </div>
@@ -285,25 +290,36 @@ function StudentDashboard() {
       </main>
 
       {editorAssignment && (
-        <SubmitWithEditor
-          project={{
-            assignmentId: editorAssignment.id,
-            title: editorAssignment.project?.title || 'Assignment',
-            subject: editorAssignment.project?.subject || '',
-            maxMarks: editorAssignment.project?.maxMarks || 100,
-            dueDate: editorAssignment.project?.dueDate,
-            codeContent: editorAssignment.submission?.codeContent || '',
-            submissionLanguage: editorAssignment.submission?.language || '',
-            description: editorAssignment.project?.description || '',
-            requirements: editorAssignment.project?.requirements || ''
-          }}
-          onClose={closeSubmissionModal}
-          onSuccess={async () => {
-            closeSubmissionModal();
-            await fetchAssignments();
-            await fetchProfileSnapshot();
-          }}
-        />
+        <Suspense fallback={<div className="sd-loader-box"><LogoLoader compact /></div>}>
+          <SubmitWithEditor
+            project={{
+              assignmentId: editorAssignment.id,
+              title: editorAssignment.project?.title || 'Assignment',
+              subject: editorAssignment.project?.subject || '',
+              maxMarks: editorAssignment.project?.maxMarks || 100,
+              dueDate: editorAssignment.project?.dueDate,
+              codeContent: editorAssignment.submission?.codeContent || '',
+              submissionLanguage: editorAssignment.submission?.language || '',
+              description: editorAssignment.project?.description || '',
+              requirements: editorAssignment.project?.requirements || ''
+            }}
+            onClose={closeSubmissionModal}
+            onSuccess={(savedSubmission) => {
+              closeSubmissionModal();
+              setAssignments((prev) => prev.map((assignment) => (
+                assignment.id === editorAssignment.id
+                  ? {
+                      ...assignment,
+                      status: 'submitted',
+                      submission: savedSubmission || assignment.submission
+                    }
+                  : assignment
+              )));
+              // Keep UI responsive: refresh data in background without full-page loader.
+              void fetchAssignments({ showLoader: false });
+            }}
+          />
+        </Suspense>
       )}
 
       {showProfile && (

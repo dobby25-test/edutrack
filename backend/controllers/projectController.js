@@ -552,12 +552,20 @@ const getTeacherStats = async (req, res) => {
 
 const getStudentAssignments = async (req, res) => {
   try {
-    const assignments = await Assignment.findAll({
+    const parsedPage = Number.parseInt(req.query.page, 10);
+    const parsedLimit = Number.parseInt(req.query.limit, 10);
+    const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 50;
+    const offset = (page - 1) * limit;
+
+    const { rows, count } = await Assignment.findAndCountAll({
       where: { studentId: req.user.id },
+      attributes: ['id', 'projectId', 'studentId', 'status', 'submittedAt', 'gradedAt', 'createdAt'],
       include: [
         {
           model: Project,
           as: 'project',
+          attributes: ['id', 'title', 'subject', 'description', 'requirements', 'dueDate', 'maxMarks'],
           include: [
             {
               model: User,
@@ -568,16 +576,24 @@ const getStudentAssignments = async (req, res) => {
         },
         {
           model: Submission,
-          as: 'submission'
+          as: 'submission',
+          attributes: ['id', 'assignmentId', 'codeContent', 'language', 'studentComments', 'teacherFeedback', 'marks', 'status', 'createdAt', 'updatedAt']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+      distinct: true
     });
 
     res.json({
       success: true,
-      count: assignments.length,
-      assignments
+      count: rows.length,
+      totalCount: count,
+      page,
+      limit,
+      totalPages: Math.max(Math.ceil(count / limit), 1),
+      assignments: rows
     });
   } catch (error) {
     console.error('Get student assignments error:', error);
@@ -635,9 +651,9 @@ const submitAssignment = async (req, res) => {
         throw Object.assign(new Error('Assignment not found'), { statusCode: 404 });
       }
 
-      if (assignment.status === 'graded') {
+      if (assignment.status === 'submitted' || assignment.status === 'graded') {
         throw Object.assign(
-          new Error('This assignment has already been graded and cannot be edited'),
+          new Error('This assignment has already been submitted and cannot be edited'),
           { statusCode: 400 }
         );
       }

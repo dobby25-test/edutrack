@@ -53,14 +53,14 @@ export default function SubmitWithEditor({ project, onClose, onSuccess }) {
         throw new Error('Missing assignment id. Please refresh and try again.');
       }
 
-      await projectService.submitAssignment(assignmentId, {
+      const result = await projectService.submitAssignment(assignmentId, {
         codeContent: code,
         studentComments: comments,
         language,
       });
 
       localStorage.removeItem(draftKey);
-      onSuccess?.();
+      onSuccess?.(result?.submission || null);
     } catch (err) {
       const isAxiosError = Boolean(err?.response);
       const apiMessage = err?.response?.data?.message || err?.message;

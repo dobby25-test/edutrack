@@ -77,9 +77,9 @@ const projectService = {
   },
 
   // Get student's own assignments
-  getMyAssignments: async () => {
+  getMyAssignments: async (params = {}) => {
     try {
-      const response = await api.get('/projects/student/my-assignments');
+      const response = await api.get('/projects/student/my-assignments', { params });
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch assignments' };
