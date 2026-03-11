@@ -52,7 +52,8 @@ function AddSingleUser({ onSuccess }) {
     const upper = 'ABCDEFGHJKMNPQRSTUVWXYZ';
     const lower = 'abcdefghjkmnpqrstuvwxyz';
     const digits = '23456789';
-    const symbols = '!@#$%^&*(){}[]?';
+    // Must match backend PASSWORD_POLICY_RE special-char set.
+    const symbols = '!@#$%^&*(),.?":{}|<>';
     const all = upper + lower + digits + symbols;
     const pick = (chars) => chars[Math.floor(Math.random() * chars.length)];
 
