@@ -122,8 +122,8 @@ export default function DirectorDashboard() {
     if (active !== 'projects') setStatus('all');
   }, [active]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async ({ showLoader = false } = {}) => {
+    if (showLoader) setLoading(true);
     try {
       const [statsRes, projectsRes, usersRes] = await Promise.all([
         api.get('/projects/director/stats'),
@@ -175,7 +175,7 @@ export default function DirectorDashboard() {
       console.error(e);
       setData({ stats: {}, projects: [], departments: [], teachers: [], students: [] });
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, []);
 
@@ -192,7 +192,7 @@ export default function DirectorDashboard() {
   }, [user?.name]);
 
   useEffect(() => {
-    void load();
+    void load({ showLoader: true });
     void fetchProfileSnapshot();
   }, [load, fetchProfileSnapshot]);
 
@@ -300,7 +300,7 @@ export default function DirectorDashboard() {
                 />
               )}
               <button onClick={exportReport}>Generate Report</button>
-              <button onClick={load}>Refresh</button>
+              <button onClick={() => load({ showLoader: false })}>Refresh</button>
               <button className="dir-avatar-btn" onClick={() => setShowProfile(true)} title="Open profile">
                 {profilePhoto ? (
                   <img src={profilePhoto} alt={profileName} className="dir-avatar-image" />
@@ -452,7 +452,7 @@ export default function DirectorDashboard() {
 
           {!loading && active === 'users' && (
             <section>
-              <UserManagement onSuccess={load} />
+              <UserManagement onSuccess={() => load({ showLoader: false })} />
             </section>
           )}
 

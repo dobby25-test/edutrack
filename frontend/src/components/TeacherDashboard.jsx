@@ -42,9 +42,9 @@ function TeacherDashboard() {
     }
   }, [user?.name]);
 
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async ({ showLoader = false } = {}) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const [statsData, projectsData] = await Promise.all([
         projectService.getTeacherStats(),
         projectService.getMyProjects()
@@ -55,12 +55,12 @@ function TeacherDashboard() {
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void fetchDashboardData();
+    void fetchDashboardData({ showLoader: true });
     void fetchProfileSnapshot();
   }, [fetchDashboardData, fetchProfileSnapshot]);
 
@@ -78,7 +78,7 @@ function TeacherDashboard() {
     try {
       await projectService.assignProject(projectId, studentIds);
       setShowStudentSelector(false);
-      fetchDashboardData();
+      void fetchDashboardData({ showLoader: false });
     } catch (error) {
       console.error('Failed to assign project:', error);
       alert(error.message || 'Failed to assign students');
@@ -238,7 +238,7 @@ function TeacherDashboard() {
             projects={projects}
             onCreateNew={() => setShowCreateModal(true)}
             onAssignProject={handleOpenAssignModal}
-            onRefresh={fetchDashboardData}
+            onRefresh={() => fetchDashboardData({ showLoader: false })}
           />
         )}
 
@@ -246,7 +246,7 @@ function TeacherDashboard() {
           <SubmissionsView
             projects={projects}
             selectedProject={selectedProject}
-            onRefresh={fetchDashboardData}
+            onRefresh={() => fetchDashboardData({ showLoader: false })}
           />
         )}
 
@@ -260,7 +260,7 @@ function TeacherDashboard() {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
-            fetchDashboardData();
+            void fetchDashboardData({ showLoader: false });
           }}
         />
       )}

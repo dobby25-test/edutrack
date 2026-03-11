@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
 
 const ROLE_OPTIONS = ['student', 'teacher'];
+const PASSWORD_POLICY_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,128}$/;
 
 const INITIAL_FORM = {
   name: '',
@@ -38,7 +39,7 @@ function AddSingleUser({ onSuccess }) {
   const [message, setMessage] = useState('');
 
   const canSubmit = useMemo(() => {
-    return form.name.trim() && form.email.trim() && form.password.length >= 6;
+    return form.name.trim() && form.email.trim() && PASSWORD_POLICY_RE.test(form.password);
   }, [form]);
 
   const update = (key, value) => {
@@ -48,11 +49,18 @@ function AddSingleUser({ onSuccess }) {
   };
 
   const generatePassword = () => {
-    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    let value = '';
-    for (let i = 0; i < 12; i += 1) {
-      value += chars[Math.floor(Math.random() * chars.length)];
+    const upper = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+    const lower = 'abcdefghjkmnpqrstuvwxyz';
+    const digits = '23456789';
+    const symbols = '!@#$%^&*(){}[]?';
+    const all = upper + lower + digits + symbols;
+    const pick = (chars) => chars[Math.floor(Math.random() * chars.length)];
+
+    const seed = [pick(upper), pick(lower), pick(digits), pick(symbols)];
+    while (seed.length < 12) {
+      seed.push(pick(all));
     }
+    const value = seed.sort(() => Math.random() - 0.5).join('');
     update('password', value);
   };
 
@@ -62,7 +70,7 @@ function AddSingleUser({ onSuccess }) {
     setMessage('');
 
     if (!canSubmit) {
-      setError('Name, email, and a 6+ char password are required.');
+      setError('Name/email required. Password must be 8+ chars with upper, lower, number, and symbol.');
       return;
     }
 
@@ -120,7 +128,14 @@ function AddSingleUser({ onSuccess }) {
       <div className="um-row">
         <label>
           Password
-          <input value={form.password} onChange={(e) => update('password', e.target.value)} minLength={6} required />
+          <input
+            type="text"
+            value={form.password}
+            onChange={(e) => update('password', e.target.value)}
+            minLength={8}
+            required
+            placeholder="Strong password"
+          />
         </label>
         <button type="button" className="um-secondary" onClick={generatePassword}>Generate Password</button>
       </div>
