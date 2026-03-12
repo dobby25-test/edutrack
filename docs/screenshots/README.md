@@ -9,4 +9,4 @@ Recommended filenames:
 - `director-dashboard.png`
 - `leaderboard.png`
 
-The root `README.md` already references these paths.
+The root `README.md` already references these paths ok.
