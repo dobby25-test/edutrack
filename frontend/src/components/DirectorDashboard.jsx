@@ -52,7 +52,7 @@ function Sidebar({ active, setActive, user, theme, onToggleTheme, onLogout, onOp
       </div>
       <nav>
         {tabs.map((t) => (
-          <button key={t} className={active === t ? 'active' : ''} onClick={() => setActive(t)}>
+          <button key={t} className={active === t ? 'active' : ''} aria-pressed={active === t} onClick={() => setActive(t)}>
             {t}
           </button>
         ))}
@@ -350,8 +350,8 @@ export default function DirectorDashboard() {
                 <div className="chart-head">
                   <h3>Projects by Department</h3>
                   <div>
-                    <button className={chartType === 'bar' ? 'active' : ''} onClick={() => setChartType('bar')}>Bar Chart</button>
-                    <button className={chartType === 'pie' ? 'active' : ''} onClick={() => setChartType('pie')}>Pie Chart</button>
+                    <button className={chartType === 'bar' ? 'active' : ''} aria-pressed={chartType === 'bar'} onClick={() => setChartType('bar')}>Bar Chart</button>
+                    <button className={chartType === 'pie' ? 'active' : ''} aria-pressed={chartType === 'pie'} onClick={() => setChartType('pie')}>Pie Chart</button>
                     <button onClick={() => { setChartDept('all'); setDepartment('all'); }}>Clear</button>
                   </div>
                 </div>
@@ -963,6 +963,86 @@ const styles = `
     .cards { grid-template-columns: 1fr; }
     .dir-sidebar nav { grid-template-columns: 1fr; }
     .chart-head { flex-direction: column; align-items: flex-start; }
+  }
+
+  .dir-shell button:focus-visible,
+  .dir-shell input:focus-visible,
+  .dir-shell select:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 70%, #ffffff 30%);
+    outline-offset: 2px;
+  }
+
+  /* UI refresh overrides */
+  .dir-shell {
+    --bg: #0a0e27;
+    --bg-2: #0f1f3d;
+    --surface: rgba(9, 26, 48, 0.8);
+    --soft: rgba(16, 35, 63, 0.86);
+    --ink: #e8eaed;
+    --muted: #9cb9d9;
+    --border: rgba(149, 197, 255, 0.2);
+    --accent: #00b7ff;
+    background:
+      radial-gradient(circle at 8% 4%, rgba(0, 183, 255, 0.26), transparent 42%),
+      radial-gradient(circle at 92% 10%, rgba(255, 138, 91, 0.22), transparent 38%),
+      linear-gradient(145deg, #0a0e27, #0f1f3d 52%, #091426 100%);
+  }
+
+  .dir-shell.light {
+    --bg: #eef5ff;
+    --bg-2: #f8fbff;
+    --surface: rgba(255, 255, 255, 0.92);
+    --soft: rgba(245, 250, 255, 0.95);
+    --ink: #0e2441;
+    --muted: #4d6b8b;
+    --border: rgba(13, 43, 83, 0.12);
+    --accent: #0f78d7;
+    background:
+      radial-gradient(circle at 10% 6%, rgba(15, 120, 215, 0.15), transparent 40%),
+      radial-gradient(circle at 88% 10%, rgba(239, 108, 52, 0.15), transparent 38%),
+      linear-gradient(160deg, #eef5ff, #f8fbff 48%, #eaf3ff 100%);
+  }
+
+  .dir-sidebar,
+  .cards article,
+  .chart,
+  .table,
+  .modal {
+    border-radius: 18px;
+    box-shadow: 0 16px 34px rgba(0, 10, 25, 0.28);
+  }
+
+  .dir-sidebar button:hover,
+  .dir-header button:hover,
+  .chart-head button:hover,
+  .table button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0, 183, 255, 0.22);
+  }
+
+  .cards article {
+    animation: dirFadeUp 0.45s ease both;
+  }
+
+  @keyframes dirFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(7px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dir-shell *,
+    .cards article {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+      scroll-behavior: auto !important;
+    }
   }
 `;
 

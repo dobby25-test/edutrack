@@ -456,36 +456,38 @@ export default function UserManagement({ onSuccess }) {
   return (
     <>
       <style>{`
-        .um-wrap{display:grid;gap:16px}
+        .um-wrap{display:grid;gap:16px;--um-bg:rgba(255,255,255,.78);--um-soft:rgba(245,250,255,.86);--um-border:rgba(13,43,83,.15);--um-text:#0f2440;--um-muted:#4a6888;--um-primary:#0f78d7;--um-danger:#dc2626}
         .um-tabs{display:flex;gap:8px;flex-wrap:wrap}
-        .um-card{display:grid;gap:12px;border:1px solid #d6dbe3;border-radius:10px;padding:16px;background:#fff}
+        .um-card{display:grid;gap:12px;border:1px solid var(--um-border);border-radius:14px;padding:16px;background:var(--um-bg);backdrop-filter:blur(6px);box-shadow:0 10px 24px rgba(0,10,25,.12)}
         .um-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         .um-actions{display:flex;gap:8px;flex-wrap:wrap}
-        .um-card label{display:grid;gap:6px;font-size:13px;color:#1f2937}
-        .um-card input,.um-card select,.um-search{border:1px solid #c7cfdb;border-radius:8px;padding:9px 10px;font-size:14px}
+        .um-card label{display:grid;gap:6px;font-size:13px;color:var(--um-text)}
+        .um-card input,.um-card select,.um-search{border:1px solid var(--um-border);border-radius:10px;padding:9px 10px;font-size:14px;background:var(--um-soft);color:var(--um-text)}
         .um-search{min-width:260px;flex:1}
-        .um-primary,.um-secondary,.um-danger{border:0;border-radius:8px;padding:10px 12px;cursor:pointer;font-weight:600}
-        .um-primary{background:#0f172a;color:#fff}
-        .um-secondary{background:#e5e7eb;color:#111827}
-        .um-danger{background:#fee2e2;color:#991b1b}
+        .um-primary,.um-secondary,.um-danger{border:1px solid transparent;border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:700;transition:transform .16s ease,box-shadow .2s ease,border-color .2s ease}
+        .um-primary{background:linear-gradient(98deg,var(--um-primary),#2acbff);color:#fff}
+        .um-secondary{background:var(--um-soft);color:var(--um-text);border-color:var(--um-border)}
+        .um-secondary.active{background:linear-gradient(98deg,var(--um-primary),#2acbff);color:#fff;border-color:transparent}
+        .um-danger{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+        .um-primary:hover,.um-secondary:hover,.um-danger:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(0,10,25,.12)}
         .um-secondary.um-file input{display:none}
         .um-error{color:#b91c1c;font-size:13px;margin:0}
         .um-success{color:#166534;font-size:13px;margin:0}
-        .um-muted{color:#6b7280;font-size:13px;margin:0}
-        .um-preview{overflow:auto;border:1px solid #e5e7eb;border-radius:8px}
+        .um-muted{color:var(--um-muted);font-size:13px;margin:0}
+        .um-preview{overflow:auto;border:1px solid var(--um-border);border-radius:10px}
         .um-preview table{width:100%;border-collapse:collapse;min-width:940px}
-        .um-preview th,.um-preview td{border-bottom:1px solid #edf0f4;padding:8px 10px;text-align:left;font-size:12px;vertical-align:top}
+        .um-preview th,.um-preview td{border-bottom:1px solid var(--um-border);padding:8px 10px;text-align:left;font-size:12px;vertical-align:top}
         .um-inline-actions{display:flex;gap:6px;flex-wrap:wrap}
         .um-result{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-        .um-result p{margin:0;padding:8px;border:1px solid #e5e7eb;border-radius:8px;background:#f8fafc;text-align:center}
+        .um-result p{margin:0;padding:8px;border:1px solid var(--um-border);border-radius:8px;background:var(--um-soft);text-align:center}
         @media (max-width:720px){.um-row{grid-template-columns:1fr}.um-search{min-width:0;width:100%}}
       `}</style>
 
       <div className="um-wrap">
         <div className="um-tabs">
-          <button type="button" className="um-secondary" onClick={() => setMode('single')}>Single User</button>
-          <button type="button" className="um-secondary" onClick={() => setMode('bulk')}>Bulk Import</button>
-          <button type="button" className="um-secondary" onClick={() => setMode('manage')}>Manage Users</button>
+          <button type="button" aria-pressed={mode === 'single'} className={`um-secondary ${mode === 'single' ? 'active' : ''}`} onClick={() => setMode('single')}>Single User</button>
+          <button type="button" aria-pressed={mode === 'bulk'} className={`um-secondary ${mode === 'bulk' ? 'active' : ''}`} onClick={() => setMode('bulk')}>Bulk Import</button>
+          <button type="button" aria-pressed={mode === 'manage'} className={`um-secondary ${mode === 'manage' ? 'active' : ''}`} onClick={() => setMode('manage')}>Manage Users</button>
         </div>
 
         {mode === 'single' && <AddSingleUser onSuccess={onSuccess} />}

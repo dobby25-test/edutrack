@@ -685,3 +685,125 @@
   }
 }
 
+/* UI refresh overrides */
+.teacher-dashboard {
+  --td-bg-2: #0f1f3d;
+  --td-panel: rgba(9, 26, 48, 0.8);
+  --td-panel-2: rgba(16, 35, 63, 0.86);
+  --td-border: rgba(149, 197, 255, 0.2);
+  --td-muted: #9cb9d9;
+  --td-accent: #00b7ff;
+  --td-accent-2: #ff8a5b;
+  background:
+    radial-gradient(circle at 8% 4%, rgba(0, 183, 255, 0.26), transparent 42%),
+    radial-gradient(circle at 92% 10%, rgba(255, 138, 91, 0.22), transparent 38%),
+    linear-gradient(145deg, #0a0e27, #0f1f3d 52%, #091426 100%);
+  position: relative;
+}
+
+.teacher-dashboard.light {
+  --td-panel: rgba(255, 255, 255, 0.92);
+  --td-panel-2: rgba(245, 250, 255, 0.95);
+  --td-border: rgba(13, 43, 83, 0.12);
+  --td-text: #0e2441;
+  --td-muted: #4d6b8b;
+  --td-accent: #0f78d7;
+  --td-accent-2: #ef6c34;
+  background:
+    radial-gradient(circle at 10% 6%, rgba(15, 120, 215, 0.15), transparent 40%),
+    radial-gradient(circle at 88% 10%, rgba(239, 108, 52, 0.15), transparent 38%),
+    linear-gradient(160deg, #eef5ff, #f8fbff 48%, #eaf3ff 100%);
+}
+
+.teacher-dashboard::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.14) 0.5px, transparent 0.5px),
+    radial-gradient(rgba(255, 255, 255, 0.08) 0.5px, transparent 0.5px);
+  background-size: 24px 24px, 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+.td-header {
+  backdrop-filter: blur(12px);
+  background: rgba(3, 15, 31, 0.72);
+}
+
+.teacher-dashboard.light .td-header {
+  background: rgba(241, 247, 255, 0.86);
+}
+
+.td-card {
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(0, 8, 22, 0.3);
+  animation: tdFadeUp 0.45s ease both;
+}
+
+.teacher-dashboard.light .td-card {
+  box-shadow: 0 16px 32px rgba(13, 43, 83, 0.09);
+}
+
+.td-card:hover {
+  border-color: color-mix(in srgb, var(--td-accent) 48%, var(--td-border));
+}
+
+.td-list-item {
+  transition: transform 0.18s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.td-list-item:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--td-accent) 42%, var(--td-border));
+}
+
+.td-button {
+  background: linear-gradient(98deg, var(--td-accent), var(--td-accent-2));
+}
+
+.td-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(0, 183, 255, 0.3);
+}
+
+.td-tab.active {
+  color: #8bdfff;
+  border-bottom-color: var(--td-accent);
+}
+
+.teacher-dashboard.light .td-tab.active {
+  color: #0f78d7;
+}
+
+@keyframes tdFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.teacher-dashboard button:focus-visible,
+.teacher-dashboard input:focus-visible,
+.teacher-dashboard select:focus-visible,
+.teacher-dashboard textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--td-accent) 72%, #ffffff 28%);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .td-card,
+  .td-list-item,
+  .td-button {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+

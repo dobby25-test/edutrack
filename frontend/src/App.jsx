@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LogoLoader from './components/shared/LogoLoader';
 import ProtectedRoute from './components/ProtectedRoute';
 
-const Login = lazy(() => import('./components/auth/AuthPages').then((m) => ({ default: m.Login })));
+const LandingPage = lazy(() => import('./components/LandingPage'));
+const Login = lazy(() => import('./components/auth/LoginPage'));
 const ForgotPassword = lazy(() => import('./components/auth/AuthPages').then((m) => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('./components/auth/AuthPages').then((m) => ({ default: m.ResetPassword })));
 const DirectorSignup = lazy(() => import('./components/auth/DirectorSignup'));
@@ -16,6 +17,8 @@ function App() {
     <Router>
       <Suspense fallback={<LogoLoader fullscreen />}>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/director-signup" element={<DirectorSignup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -48,8 +51,7 @@ function App() {
             }
           />
 
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </Router>

@@ -228,18 +228,18 @@ export default function DirectorProfile({ onClose, theme = 'light', onToggleThem
 }
 
 const css = `
-  .dp-wrap{--dp-bg:#eff6ff;--dp-bg-2:#f8fbff;--dp-card:#fff;--dp-soft:#f8fafc;--dp-border:#dbe4f0;--dp-text:#0f172a;--dp-muted:#475569;--dp-primary:#0f172a;min-height:100vh;padding:20px;background:linear-gradient(160deg,var(--dp-bg),var(--dp-bg-2));color:var(--dp-text);font-family:"Space Grotesk",sans-serif}
-  .dp-wrap.dark{--dp-bg:#071226;--dp-bg-2:#0b1830;--dp-card:rgba(14,27,48,.92);--dp-soft:rgba(18,35,60,.9);--dp-border:rgba(120,173,255,.22);--dp-text:#eaf3ff;--dp-muted:#9fb0c8;--dp-primary:#5aa2ff}
+  .dp-wrap{--dp-bg:#eef5ff;--dp-bg-2:#f8fbff;--dp-card:#fff;--dp-soft:#f8fafc;--dp-border:#dbe4f0;--dp-text:#0f2440;--dp-muted:#4a6888;--dp-primary:#0f78d7;min-height:100vh;padding:20px;background:linear-gradient(160deg,var(--dp-bg),var(--dp-bg-2));color:var(--dp-text);font-family:"Space Grotesk",sans-serif}
+  .dp-wrap.dark{--dp-bg:#071226;--dp-bg-2:#0b1830;--dp-card:rgba(14,27,48,.92);--dp-soft:rgba(18,35,60,.9);--dp-border:rgba(120,173,255,.22);--dp-text:#eaf3ff;--dp-muted:#9fb9d6;--dp-primary:#00b7ff}
   .dp-top{max-width:980px;margin:0 auto 10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
   .dp-back,.dp-theme{border:1px solid var(--dp-border);background:var(--dp-soft);color:var(--dp-text);font-weight:700;cursor:pointer;padding:8px 12px;border-radius:10px}
   .dp-card{max-width:980px;margin:0 auto;background:var(--dp-card);border:1px solid var(--dp-border);border-radius:16px;overflow:hidden}
-  .dp-banner{height:120px;background:linear-gradient(120deg,#9333ea,#f97316)}
+  .dp-banner{height:120px;background:linear-gradient(120deg,#00b7ff,#ff8a5b)}
   .dp-main{position:relative;padding:66px 18px 18px}
   .dp-photo-wrap{position:absolute;top:-48px;left:18px}
   .dp-photo,.dp-ph{width:96px;height:96px;border-radius:999px;border:3px solid #fff;box-shadow:0 8px 18px rgba(2,6,23,.16)}
   .dp-photo{object-fit:cover}
   .dp-ph{display:grid;place-items:center;background:#9333ea;color:#fff;font-size:36px;font-weight:700}
-  .dp-edit{position:absolute;right:-6px;bottom:-6px;border:0;background:var(--dp-primary);color:#fff;border-radius:999px;padding:5px 9px;font-size:11px;cursor:pointer}
+  .dp-edit{position:absolute;right:-8px;top:-8px;border:0;background:var(--dp-primary);color:#fff;border-radius:999px;padding:6px 10px;font-size:11px;cursor:pointer;box-shadow:0 8px 14px rgba(0,0,0,.25)}
   .dp-main h2{margin:0 0 6px}
   .dp-main p{margin:0;color:var(--dp-muted)}
   .dp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
@@ -254,7 +254,7 @@ const css = `
   .dp-overview > div{border:1px solid var(--dp-border);border-radius:12px;padding:12px;background:var(--dp-soft)}
   .dp-overview h3{margin:0 0 8px}
   .dp-overview p{margin:0 0 5px;color:var(--dp-muted)}
-  .dp-chip{display:inline-block;margin:0 8px 8px 0;padding:6px 9px;border-radius:999px;background:rgba(147,51,234,.15);border:1px solid rgba(147,51,234,.4)}
+  .dp-chip{display:inline-block;margin:0 8px 8px 0;padding:6px 9px;border-radius:999px;background:rgba(0,183,255,.14);border:1px solid rgba(0,183,255,.35)}
   .dp-badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
   .dp-badges article{display:flex;gap:10px;border:1px solid var(--dp-border);border-radius:12px;padding:10px;background:var(--dp-soft)}
   .dp-badges article div:first-child{font-size:30px}
@@ -266,8 +266,8 @@ const css = `
   .dp-modal header{display:flex;justify-content:space-between;align-items:center}
   .dp-modal header h3{margin:0}
   .dp-modal header button{border:0;background:var(--dp-soft);color:var(--dp-text);width:28px;height:28px;border-radius:999px;cursor:pointer}
-  .dp-drop{margin-top:10px;border:2px dashed rgba(147,51,234,.4);border-radius:12px;padding:20px;text-align:center;background:var(--dp-soft)}
-  .dp-drop.drag{border-color:#9333ea}
+  .dp-drop{margin-top:10px;border:2px dashed rgba(0,183,255,.4);border-radius:12px;padding:20px;text-align:center;background:var(--dp-soft)}
+  .dp-drop.drag{border-color:var(--dp-primary)}
   .dp-drop label{display:grid;gap:5px;cursor:pointer}
   .dp-preview{margin-top:10px;width:100%;max-height:230px;object-fit:cover;border-radius:10px}
   .dp-error{color:#b91c1c;font-size:13px;margin:8px 0 0}
