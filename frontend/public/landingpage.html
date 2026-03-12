@@ -7,269 +7,463 @@
   <meta name="description" content="EduTrack helps students, teachers, and directors manage projects, progress, and outcomes in one simple platform.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f6f8fc;
-      --surface: #ffffff;
-      --ink: #111827;
-      --muted: #5b6474;
-      --line: #e6ebf2;
-      --brand: #0f62fe;
-      --brand-2: #22c55e;
-      --accent: #f97316;
-      --shadow: 0 20px 45px rgba(10, 28, 69, 0.12);
-      --radius: 16px;
-      --max: 1120px;
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --ink: #1A1A1A;
+      --muted: #6B7280;
+      --line: rgba(0, 0, 0, 0.08);
+      --accent: #FFD000;
+      --accent-dark: #1A1A1A;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      --shadow-accent: 0 12px 32px rgba(255, 208, 0, 0.25);
+      --radius: 20px;
+      --max: 1180px;
     }
 
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
 
     body {
-      font-family: Manrope, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background:
-        radial-gradient(circle at 95% 5%, rgba(34, 197, 94, 0.14), transparent 35%),
-        radial-gradient(circle at 5% 20%, rgba(15, 98, 254, 0.13), transparent 40%),
-        var(--bg);
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
       color: var(--ink);
       line-height: 1.6;
     }
 
     .container {
-      width: min(var(--max), calc(100% - 2rem));
+      width: min(var(--max), calc(100% - 3rem));
       margin: 0 auto;
     }
 
+    /* Navigation */
     .nav {
       position: sticky;
       top: 0;
       z-index: 10;
-      background: rgba(246, 248, 252, 0.9);
+      background: rgba(250, 250, 250, 0.9);
       border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
     }
 
     .nav-wrap {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.85rem 0;
+      padding: 1rem 0;
     }
 
     .logo {
-      font-family: Sora, sans-serif;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
     }
 
-    .logo span { color: var(--brand); }
+    .logo-box {
+      width: 44px;
+      height: 44px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--accent-dark);
+    }
+
+    .logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
 
     .nav-links {
       display: flex;
-      gap: 1.1rem;
+      gap: 2rem;
       align-items: center;
     }
 
     .nav-links a {
       color: var(--muted);
       text-decoration: none;
-      font-weight: 700;
+      font-weight: 600;
       font-size: 0.95rem;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--ink);
     }
 
     .btn {
       border: 0;
       border-radius: 12px;
-      padding: 0.7rem 1rem;
+      padding: 0.85rem 1.5rem;
       text-decoration: none;
-      font-weight: 800;
-      font-size: 0.93rem;
+      font-weight: 600;
+      font-size: 0.95rem;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .btn:hover { transform: translateY(-1px); }
+    .btn:hover { transform: translateY(-2px); }
+    
     .btn-primary {
-      color: #fff;
-      background: linear-gradient(90deg, var(--brand), #3b82f6);
-      box-shadow: 0 8px 25px rgba(15, 98, 254, 0.35);
+      color: var(--accent-dark);
+      background: var(--accent);
+      box-shadow: var(--shadow-accent);
     }
+    
+    .btn-primary:hover {
+      box-shadow: 0 16px 40px rgba(255, 208, 0, 0.35);
+    }
+    
     .btn-outline {
       color: var(--ink);
-      border: 1px solid var(--line);
-      background: #fff;
+      border: 2px solid var(--line);
+      background: transparent;
+    }
+    
+    .btn-outline:hover {
+      border-color: var(--accent);
+      background: rgba(255, 208, 0, 0.08);
     }
 
+    /* Hero Section */
     .hero {
-      padding: 4.5rem 0 2.5rem;
+      padding: 6rem 0 4rem;
       display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 2rem;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 4rem;
       align-items: center;
     }
 
     .badge {
-      display: inline-block;
-      padding: 0.3rem 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.5rem 1rem;
       border-radius: 999px;
-      border: 1px solid #d5def0;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #1f3f7a;
-      background: #eef4ff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-dark);
+      background: var(--accent);
+    }
+
+    .badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent-dark);
+      border-radius: 50%;
     }
 
     h1 {
-      font-family: Sora, sans-serif;
-      font-size: clamp(2rem, 4.8vw, 3.5rem);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.5rem, 5vw, 4rem);
       line-height: 1.1;
-      margin: 0.8rem 0 1rem;
+      margin: 1.5rem 0 1.25rem;
       letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+
+    h1 span {
+      position: relative;
+      display: inline-block;
+    }
+
+    h1 span::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 0;
+      width: 100%;
+      height: 12px;
+      background: var(--accent);
+      z-index: -1;
+      opacity: 0.6;
     }
 
     .lead {
       color: var(--muted);
-      max-width: 60ch;
-      margin-bottom: 1.4rem;
+      font-size: 1.15rem;
+      max-width: 52ch;
+      margin-bottom: 2rem;
+      line-height: 1.7;
     }
 
-    .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .hero-actions { 
+      display: flex; 
+      gap: 1rem; 
+      flex-wrap: wrap; 
+    }
 
     .hero-card {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 1rem;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--accent);
+    }
+
+    .hero-card h3 {
+      margin: 0;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .hero-card > p {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
     }
 
     .stat {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-top: 0.75rem;
+      gap: 1rem;
+      margin-top: 1.5rem;
     }
 
     .stat div {
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 0.9rem;
-      background: #fbfdff;
+      border-radius: 16px;
+      padding: 1.25rem;
+      background: var(--bg);
+      transition: all 0.2s ease;
+    }
+
+    .stat div:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
     }
 
     .stat strong {
       display: block;
-      font-size: 1.2rem;
-      font-family: Sora, sans-serif;
+      font-size: 1.75rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      color: var(--ink);
     }
 
-    section { padding: 2.5rem 0; }
+    .stat span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* Sections */
+    section { padding: 4rem 0; }
+    
     h2 {
-      font-family: Sora, sans-serif;
-      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
       margin: 0 0 0.5rem;
       letter-spacing: -0.02em;
+      font-weight: 700;
     }
-    .section-sub { color: var(--muted); margin-top: 0; }
+    
+    .section-sub { 
+      color: var(--muted); 
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
 
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
+      gap: 1.5rem;
+      margin-top: 2rem;
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 1.1rem;
+      padding: 1.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow);
+      transform: translateY(-4px);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
     }
 
     .card h3 {
-      margin-top: 0;
-      margin-bottom: 0.4rem;
-      font-family: Sora, sans-serif;
-      font-size: 1.05rem;
+      margin: 0 0 0.5rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
     }
 
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Steps */
     .steps {
       display: grid;
-      gap: 0.7rem;
-      margin-top: 1rem;
+      gap: 1rem;
+      margin-top: 2rem;
     }
 
     .step {
-      background: #fff;
+      background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 0.9rem 1rem;
+      border-radius: 16px;
+      padding: 1.5rem;
       display: flex;
-      gap: 0.8rem;
+      gap: 1.25rem;
       align-items: flex-start;
+      transition: all 0.2s ease;
+    }
+
+    .step:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow);
     }
 
     .step-num {
-      width: 1.7rem;
-      height: 1.7rem;
-      border-radius: 50%;
-      background: #e8f0ff;
-      color: #1a4ab4;
-      font-size: 0.85rem;
-      font-weight: 800;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: var(--accent-dark);
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       flex: 0 0 auto;
     }
 
+    .step-content strong {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .step-content span {
+      color: var(--muted);
+    }
+
+    /* CTA Section */
     .cta {
-      background: linear-gradient(135deg, #0f62fe, #1d4ed8 60%, #2563eb);
-      color: #fff;
-      border-radius: 20px;
-      padding: 2rem;
+      background: var(--accent);
+      color: var(--accent-dark);
+      border-radius: 24px;
+      padding: 3rem;
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 1rem;
+      gap: 2rem;
       align-items: center;
-      box-shadow: var(--shadow);
     }
 
-    .cta p { margin: 0.3rem 0 0; opacity: 0.95; }
-    .cta .btn-outline { border-color: rgba(255, 255, 255, 0.35); background: transparent; color: #fff; }
+    .cta h2 {
+      margin: 0;
+      color: var(--accent-dark);
+    }
 
+    .cta p { 
+      margin: 0.5rem 0 0; 
+      opacity: 0.8;
+      font-size: 1.1rem;
+    }
+    
+    .cta .btn-outline { 
+      border-color: var(--accent-dark); 
+      color: var(--accent-dark); 
+    }
+    
+    .cta .btn-outline:hover {
+      background: rgba(26, 26, 26, 0.1);
+    }
+    
+    .cta .btn-dark {
+      background: var(--accent-dark);
+      color: var(--accent);
+    }
+
+    /* Footer */
     footer {
-      padding: 1.4rem 0 2rem;
+      padding: 2rem 0 3rem;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.95rem;
+      border-top: 1px solid var(--line);
+      margin-top: 2rem;
     }
 
+    /* Responsive */
     @media (max-width: 920px) {
-      .hero { grid-template-columns: 1fr; }
+      .hero { 
+        grid-template-columns: 1fr; 
+        padding: 4rem 0 3rem;
+      }
+      .hero-card { max-width: 500px; }
       .grid-3 { grid-template-columns: 1fr 1fr; }
-      .cta { grid-template-columns: 1fr; }
+      .cta { grid-template-columns: 1fr; text-align: center; }
+      .cta > div:last-child { justify-content: center; }
     }
 
     @media (max-width: 640px) {
       .nav-links a.hide-sm { display: none; }
       .grid-3 { grid-template-columns: 1fr; }
-      .hero { padding-top: 3.2rem; }
+      .hero { padding-top: 3rem; }
+      h1 { font-size: 2.25rem; }
+      .cta { padding: 2rem; }
     }
   </style>
 </head>
 <body>
   <header class="nav">
     <div class="container nav-wrap">
-      <div class="logo">Edu<span>Track</span></div>
+      <a href="/" class="logo">
+        <div class="logo-box">E</div>
+        <span class="logo-text">EduTrack</span>
+      </a>
       <nav class="nav-links">
         <a class="hide-sm" href="#features">Features</a>
         <a class="hide-sm" href="#how">How It Works</a>
-        <a href="/login" class="btn btn-outline">Sign In</a>
+        <a href="/login" class="btn btn-primary">Sign In</a>
       </nav>
     </div>
   </header>
@@ -277,67 +471,94 @@
   <main class="container">
     <section class="hero">
       <div>
-        <span class="badge">Project Management for Campus Teams</span>
-        <h1>Track Student Projects Without Spreadsheets</h1>
+        <span class="badge">Academic Project Management</span>
+        <h1>Track Projects.<br/><span>Not Spreadsheets.</span></h1>
         <p class="lead">
-          One platform for submissions, reviews, deadlines, analytics, and notifications.
-          Built for students, teachers, and directors.
+          One unified platform for submissions, reviews, deadlines, and analytics.
+          Built for students, teachers, and directors who value simplicity.
         </p>
         <div class="hero-actions">
-          <a href="/login" class="btn btn-primary">Open EduTrack</a>
-          <a href="#features" class="btn btn-outline">Explore Features</a>
+          <a href="/login" class="btn btn-primary">Get Started Free</a>
+          <a href="#features" class="btn btn-outline">Learn More</a>
         </div>
       </div>
       <aside class="hero-card">
-        <h3 style="margin:0;font-family:Sora,sans-serif;">Live Snapshot</h3>
-        <p style="margin:0.3rem 0 0;color:var(--muted);">A quick view of what teams monitor every day.</p>
+        <h3>Live Dashboard Preview</h3>
+        <p>Real metrics from active institutions using EduTrack.</p>
         <div class="stat">
-          <div><strong>92%</strong><span>On-time submissions</span></div>
+          <div><strong>92%</strong><span>On-time rate</span></div>
           <div><strong>148</strong><span>Active projects</span></div>
           <div><strong>31</strong><span>Pending reviews</span></div>
-          <div><strong>9</strong><span>Departments connected</span></div>
+          <div><strong>9</strong><span>Departments</span></div>
         </div>
       </aside>
     </section>
 
     <section id="features">
-      <h2>Everything in One Workflow</h2>
-      <p class="section-sub">No context switching between sheets, chat, and email threads.</p>
+      <h2>Everything You Need</h2>
+      <p class="section-sub">Stop switching between spreadsheets, emails, and chat apps.</p>
       <div class="grid-3">
         <article class="card">
+          <div class="card-icon">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
           <h3>Role-based Dashboards</h3>
-          <p>Different views for students, teachers, and directors with focused actions and data.</p>
+          <p>Tailored views for students, teachers, and directors with focused actions and relevant data.</p>
         </article>
         <article class="card">
+          <div class="card-icon">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+          </div>
           <h3>Submission Tracking</h3>
-          <p>Monitor status from assigned to submitted to reviewed with complete history.</p>
+          <p>Monitor project status from assigned to submitted to reviewed with complete history logs.</p>
         </article>
         <article class="card">
+          <div class="card-icon">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
           <h3>Performance Analytics</h3>
-          <p>Measure progress, identify blockers, and compare outcomes across cohorts.</p>
+          <p>Measure progress, identify blockers, and compare outcomes across student cohorts.</p>
         </article>
       </div>
     </section>
 
     <section id="how">
-      <h2>How EduTrack Works</h2>
-      <p class="section-sub">Simple process from assignment to completion.</p>
+      <h2>How It Works</h2>
+      <p class="section-sub">Simple three-step process from assignment to completion.</p>
       <div class="steps">
-        <div class="step"><span class="step-num">1</span><div><strong>Create and assign</strong><br>Teachers create projects and assign them to students or groups.</div></div>
-        <div class="step"><span class="step-num">2</span><div><strong>Submit and review</strong><br>Students submit work, teachers review, and feedback is recorded.</div></div>
-        <div class="step"><span class="step-num">3</span><div><strong>Track outcomes</strong><br>Directors monitor completion, quality, and team performance in real time.</div></div>
+        <div class="step">
+          <span class="step-num">1</span>
+          <div class="step-content">
+            <strong>Create and Assign</strong>
+            <span>Teachers create projects with deadlines and assign them to students or groups.</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <div class="step-content">
+            <strong>Submit and Review</strong>
+            <span>Students submit their work, teachers review submissions, and feedback is recorded.</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <div class="step-content">
+            <strong>Track Outcomes</strong>
+            <span>Directors monitor completion rates, quality metrics, and team performance in real time.</span>
+          </div>
+        </div>
       </div>
     </section>
 
     <section>
       <div class="cta">
         <div>
-          <h2 style="margin:0;color:#fff;">Ready to launch EduTrack?</h2>
-          <p>Sign in and start managing your academic project pipeline today.</p>
+          <h2>Ready to get started?</h2>
+          <p>Join institutions already using EduTrack to streamline their academic workflows.</p>
         </div>
-        <div style="display:flex;gap:.7rem;flex-wrap:wrap;">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
           <a href="/login" class="btn btn-outline">Sign In</a>
-          <a href="/register" class="btn btn-primary" style="background:#fff;color:#0f62fe;box-shadow:none;">Get Started</a>
+          <a href="/register" class="btn btn-dark">Create Account</a>
         </div>
       </div>
     </section>
@@ -345,7 +566,7 @@
 
   <footer>
     <div class="container">
-      <span id="year"></span> EduTrack. Built for modern campus operations.
+      &copy; <span id="year"></span> EduTrack. Built for modern campus operations.
     </div>
   </footer>
 
