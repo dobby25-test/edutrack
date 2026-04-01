@@ -1,5 +1,5 @@
 const { Project, Assignment, User, Submission, ExecutionUsage } = require('../models');
-const { Op } = require('sequelize');
+const { Op, fn, col, literal } = require('sequelize');
 const { sequelize } = require('../config/database');
 const { checkAndAwardAutomaticBadges } = require('./badgeController');
 const {
@@ -797,12 +797,21 @@ const getAllProjects = async (req, res) => {
  */
 const getDirectorStats = async (req, res) => {
   try {
-    const totalProjects  = await Project.count();
-    const totalTeachers  = await User.count({ where: { role: 'teacher', isActive: true } });
-    const totalStudents  = await User.count({ where: { role: 'student', isActive: true } });
-    const pendingReviews = await Assignment.count({ where: { status: 'submitted' } });
-    const totalGraded    = await Assignment.count({ where: { status: 'graded' } });
-    const totalAssigned  = await Assignment.count();
+    const [
+      totalProjects,
+      totalTeachers,
+      totalStudents,
+      pendingReviews,
+      totalGraded,
+      totalAssigned
+    ] = await Promise.all([
+      Project.count(),
+      User.count({ where: { role: 'teacher', isActive: true } }),
+      User.count({ where: { role: 'student', isActive: true } }),
+      Assignment.count({ where: { status: 'submitted' } }),
+      Assignment.count({ where: { status: 'graded' } }),
+      Assignment.count()
+    ]);
 
     res.json({
       success: true,
@@ -825,6 +834,21 @@ const getDirectorStats = async (req, res) => {
 const getAllProjectsEnhanced = async (req, res) => {
   try {
     const projects = await Project.findAll({
+      attributes: [
+        'id',
+        'title',
+        'subject',
+        'description',
+        'status',
+        'dueDate',
+        'maxMarks',
+        'teacherId',
+        'createdAt',
+        [fn('COUNT', col('assignments.id')), 'totalStudents'],
+        [fn('SUM', literal(`CASE WHEN "assignments"."status" = 'submitted' THEN 1 ELSE 0 END`)), 'submitted'],
+        [fn('SUM', literal(`CASE WHEN "assignments"."status" = 'graded' THEN 1 ELSE 0 END`)), 'graded'],
+        [fn('SUM', literal(`CASE WHEN "assignments"."status" IN ('assigned','in_progress') THEN 1 ELSE 0 END`)), 'pending']
+      ],
       include: [
         {
           model: User,
@@ -834,16 +858,23 @@ const getAllProjectsEnhanced = async (req, res) => {
         {
           model: Assignment,
           as: 'assignments',
-          include: [
-            { model: Submission, as: 'submission', required: false },
-          ],
+          attributes: [],
+          required: false
         },
       ],
+      group: [
+        'Project.id',
+        'teacher.id'
+      ],
       order: [['createdAt', 'DESC']],
+      subQuery: false
     });
 
     const result = projects.map((p) => {
-      const assignments = p.assignments || [];
+      const totalStudents = Number(p.get('totalStudents')) || 0;
+      const submitted = Number(p.get('submitted')) || 0;
+      const graded = Number(p.get('graded')) || 0;
+      const pending = Number(p.get('pending')) || 0;
       return {
         id:           p.id,
         title:        p.title,
@@ -859,10 +890,10 @@ const getAllProjectsEnhanced = async (req, res) => {
         createdAt:    p.createdAt,
 
         // Aggregated stats
-        totalStudents: assignments.length,
-        submitted:     assignments.filter(a => a.status === 'submitted').length,
-        graded:        assignments.filter(a => a.status === 'graded').length,
-        pending:       assignments.filter(a => ['assigned','in_progress'].includes(a.status)).length,
+        totalStudents,
+        submitted,
+        graded,
+        pending,
       };
     });
 

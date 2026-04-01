@@ -128,7 +128,7 @@ export default function DirectorDashboard() {
       const [statsRes, projectsRes, usersRes] = await Promise.all([
         api.get('/projects/director/stats'),
         api.get('/projects/all'),
-        api.get('/auth/all-users')
+        api.get('/auth/all-users?minimal=1')
       ]);
       const stats = statsRes.data || {};
       const projects = projectsRes.data.projects || [];

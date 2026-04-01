@@ -371,9 +371,14 @@ const getAllStudents = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
+    const minimal = String(req.query?.minimal || '') === '1';
+    const attributes = minimal
+      ? ['id', 'name', 'email', 'role', 'department', 'rollNo', 'rollNumber', 'registrationNo', 'employeeId', 'createdAt', 'isActive']
+      : { exclude: ['password', 'resetToken', 'resetExpires'] };
+
     const users = await User.findAll({
       where: { isActive: true },
-      attributes: { exclude: ['password', 'resetToken', 'resetExpires'] },
+      attributes,
       order: [['role', 'ASC'], ['name', 'ASC']]
     });
 
