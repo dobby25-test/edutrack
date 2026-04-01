@@ -103,6 +103,7 @@ export default function DirectorDashboard() {
   const user = authService.getCurrentUser();
   const [active, setActive] = useState('overview');
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [department, setDepartment] = useState('all');
@@ -175,6 +176,7 @@ export default function DirectorDashboard() {
       console.error(e);
       setData({ stats: {}, projects: [], departments: [], teachers: [], students: [] });
     } finally {
+      setHasLoaded(true);
       if (showLoader) setLoading(false);
     }
   }, []);
@@ -300,7 +302,7 @@ export default function DirectorDashboard() {
                 />
               )}
               <button onClick={exportReport}>Generate Report</button>
-              <button onClick={() => load({ showLoader: false })}>Refresh</button>
+              <button onClick={() => load({ showLoader: true })}>Refresh</button>
               <button className="dir-avatar-btn" onClick={() => setShowProfile(true)} title="Open profile">
                 {profilePhoto ? (
                   <img src={profilePhoto} alt={profileName} className="dir-avatar-image" />
@@ -335,7 +337,7 @@ export default function DirectorDashboard() {
             </div>
           )}
 
-          {!loading && active === 'overview' && (
+          {hasLoaded && active === 'overview' && (
             <>
               <section className="cards">
                 <article><p>Total Projects</p><h3>{fmt(data.projects.length)}</h3></article>
@@ -381,7 +383,7 @@ export default function DirectorDashboard() {
             </>
           )}
 
-          {!loading && active === 'departments' && (
+          {hasLoaded && active === 'departments' && (
             <section className="table">
               <header><span>Department</span><span>Students</span><span>Teachers</span><span>Projects</span><span>Submission</span><span>Graded</span></header>
               {data.departments.length === 0 && <Empty msg="No department data available." />}
@@ -398,7 +400,7 @@ export default function DirectorDashboard() {
             </section>
           )}
 
-          {!loading && active === 'teachers' && (
+          {hasLoaded && active === 'teachers' && (
             <section className="table">
               <header><span>Name</span><span>Department</span><span>Projects</span><span>Students</span><span>Pending</span><span>Efficiency</span><span>Details</span></header>
               {teachers.length === 0 && <Empty msg="No teachers found." />}
@@ -416,7 +418,7 @@ export default function DirectorDashboard() {
             </section>
           )}
 
-          {!loading && active === 'projects' && (
+          {hasLoaded && active === 'projects' && (
             <section className="table">
               <header><span>Project</span><span>Teacher</span><span>Department</span><span>Status</span><span>Due</span><span>Students</span><span>Submitted</span></header>
               {projects.length === 0 && <Empty msg="No projects found." />}
@@ -434,7 +436,7 @@ export default function DirectorDashboard() {
             </section>
           )}
 
-          {!loading && active === 'students' && (
+          {hasLoaded && active === 'students' && (
             <section className="table student">
               <header><span>Name</span><span>Email</span><span>Department</span><span>Joined</span><span>Details</span></header>
               {students.length === 0 && <Empty msg="No students found." />}
@@ -450,7 +452,7 @@ export default function DirectorDashboard() {
             </section>
           )}
 
-          {!loading && active === 'users' && (
+          {hasLoaded && active === 'users' && (
             <section>
               <UserManagement onSuccess={() => load({ showLoader: false })} />
             </section>
@@ -622,7 +624,10 @@ const styles = `
     background: color-mix(in srgb, #ffffff 82%, #fee2e2);
   }
 
-  .dir-main { padding: 22px; }
+  .dir-main {
+    padding: 22px;
+    position: relative;
+  }
 
   .dir-header {
     display: flex;
@@ -875,12 +880,21 @@ const styles = `
   .empty { padding: 14px; color: var(--muted); }
 
   .dir-loader {
-    min-height: 240px;
+    position: fixed;
+    inset: 0;
+    z-index: 35;
     display: grid;
     place-items: center;
-    border: 1px dashed color-mix(in srgb, var(--border) 84%, transparent);
+    background: rgba(7, 14, 26, 0.18);
+    backdrop-filter: blur(1.5px);
+    pointer-events: auto;
+  }
+
+  .dir-loader > * {
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
     border-radius: 14px;
-    background: color-mix(in srgb, var(--soft) 74%, transparent);
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+    padding: 14px 16px;
   }
 
   .modal-bg {
