@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
 
 const ROLE_OPTIONS = ['student', 'teacher'];
+const DEPARTMENT_OPTIONS = ['BCA', 'BSC-IT'];
 const PASSWORD_POLICY_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,128}$/;
 const NAME_RE = /^[A-Za-z][A-Za-z .'-]*$/;
 
@@ -127,7 +128,12 @@ function AddSingleUser({ onSuccess }) {
         </label>
         <label>
           Department
-          <input value={form.department} onChange={(e) => update('department', e.target.value)} placeholder="Computer Science" />
+          <select value={form.department} onChange={(e) => update('department', e.target.value)}>
+            <option value="">Select Department</option>
+            {DEPARTMENT_OPTIONS.map((dept) => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
         </label>
       </div>
 
@@ -459,7 +465,14 @@ function ExistingUsers({ onSuccess }) {
                           : <input value={form.employeeId} onChange={(e) => setForm((p) => ({ ...p, employeeId: e.target.value }))} onKeyDown={handleEditEnter} placeholder="Employee ID" />
                       ) : (user.rollNo || user.employeeId || '-')}
                     </td>
-                    <td>{isEditing ? <input value={form.department} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} onKeyDown={handleEditEnter} /> : (user.department || '-')}</td>
+                    <td>{isEditing ? (
+                      <select value={form.department} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} onKeyDown={handleEditEnter}>
+                        <option value="">Select Department</option>
+                        {DEPARTMENT_OPTIONS.map((dept) => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))}
+                      </select>
+                    ) : (user.department || '-')}</td>
                     <td>
                       <div className="um-inline-actions">
                         {!isEditing && <button type="button" className="um-secondary" onClick={() => startEdit(user)} disabled={saving}>Edit</button>}
