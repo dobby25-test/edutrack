@@ -3,6 +3,7 @@ import api from '../../services/api';
 
 const ROLE_OPTIONS = ['student', 'teacher'];
 const PASSWORD_POLICY_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,128}$/;
+const NAME_RE = /^[A-Za-z][A-Za-z .'-]*$/;
 
 const INITIAL_FORM = {
   name: '',
@@ -32,6 +33,15 @@ function parseCsv(text) {
   });
 }
 
+function normalizeNameInput(value) {
+  return value.replace(/\d+/g, '');
+}
+
+function isValidName(value) {
+  const trimmed = value.trim();
+  return trimmed.length >= 2 && NAME_RE.test(trimmed);
+}
+
 function AddSingleUser({ onSuccess }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [loading, setLoading] = useState(false);
@@ -39,11 +49,12 @@ function AddSingleUser({ onSuccess }) {
   const [message, setMessage] = useState('');
 
   const canSubmit = useMemo(() => {
-    return form.name.trim() && form.email.trim() && PASSWORD_POLICY_RE.test(form.password);
+    return isValidName(form.name) && form.email.trim() && PASSWORD_POLICY_RE.test(form.password);
   }, [form]);
 
   const update = (key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    const nextValue = key === 'name' ? normalizeNameInput(value) : value;
+    setForm((prev) => ({ ...prev, [key]: nextValue }));
     setError('');
     setMessage('');
   };
@@ -70,8 +81,13 @@ function AddSingleUser({ onSuccess }) {
     setError('');
     setMessage('');
 
-    if (!canSubmit) {
-      setError('Name/email required. Password must be 8+ chars with upper, lower, number, and symbol.');
+    if (!isValidName(form.name)) {
+      setError('Name must contain only letters and spaces (no numbers).');
+      return;
+    }
+
+    if (!form.email.trim() || !PASSWORD_POLICY_RE.test(form.password)) {
+      setError('Email required. Password must be 8+ chars with upper, lower, number, and symbol.');
       return;
     }
 
@@ -118,7 +134,13 @@ function AddSingleUser({ onSuccess }) {
       <div className="um-row">
         <label>
           Name
-          <input value={form.name} onChange={(e) => update('name', e.target.value)} required />
+          <input
+            value={form.name}
+            onChange={(e) => update('name', e.target.value)}
+            required
+            autoComplete="off"
+            placeholder="Enter full name"
+          />
         </label>
         <label>
           Email
@@ -332,10 +354,21 @@ function ExistingUsers({ onSuccess }) {
     setError('');
   };
 
+  const handleEditEnter = (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    void saveEdit();
+  };
+
   const saveEdit = async () => {
     if (!editingId) return;
-    if (!form.name.trim() || !form.email.trim()) {
-      setError('Name and email are required.');
+    if (!isValidName(form.name)) {
+      setError('Name must contain only letters and spaces (no numbers).');
+      return;
+    }
+
+    if (!form.email.trim()) {
+      setError('Email is required.');
       return;
     }
 
@@ -410,11 +443,11 @@ function ExistingUsers({ onSuccess }) {
                 const isEditing = editingId === user.id;
                 return (
                   <tr key={user.id}>
-                    <td>{isEditing ? <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} /> : user.name}</td>
-                    <td>{isEditing ? <input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} /> : user.email}</td>
+                    <td>{isEditing ? <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: normalizeNameInput(e.target.value) }))} onKeyDown={handleEditEnter} /> : user.name}</td>
+                    <td>{isEditing ? <input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} onKeyDown={handleEditEnter} /> : user.email}</td>
                     <td>
                       {isEditing ? (
-                        <select value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}>
+                        <select value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))} onKeyDown={handleEditEnter}>
                           {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
                         </select>
                       ) : user.role}
@@ -422,11 +455,11 @@ function ExistingUsers({ onSuccess }) {
                     <td>
                       {isEditing ? (
                         form.role === 'student'
-                          ? <input value={form.rollNo} onChange={(e) => setForm((p) => ({ ...p, rollNo: e.target.value }))} placeholder="Roll No" />
-                          : <input value={form.employeeId} onChange={(e) => setForm((p) => ({ ...p, employeeId: e.target.value }))} placeholder="Employee ID" />
+                          ? <input value={form.rollNo} onChange={(e) => setForm((p) => ({ ...p, rollNo: e.target.value }))} onKeyDown={handleEditEnter} placeholder="Roll No" />
+                          : <input value={form.employeeId} onChange={(e) => setForm((p) => ({ ...p, employeeId: e.target.value }))} onKeyDown={handleEditEnter} placeholder="Employee ID" />
                       ) : (user.rollNo || user.employeeId || '-')}
                     </td>
-                    <td>{isEditing ? <input value={form.department} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} /> : (user.department || '-')}</td>
+                    <td>{isEditing ? <input value={form.department} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} onKeyDown={handleEditEnter} /> : (user.department || '-')}</td>
                     <td>
                       <div className="um-inline-actions">
                         {!isEditing && <button type="button" className="um-secondary" onClick={() => startEdit(user)} disabled={saving}>Edit</button>}

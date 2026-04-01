@@ -1,16 +1,34 @@
-# React + Vite
+﻿# Frontend Module Guide
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+`frontend/` is the React client of EduTrack.
 
-Currently, two official plugins are available:
+## Main files
+- `src/main.jsx` -> app start
+- `src/App.jsx` -> route setup
+- `src/components/ProtectedRoute.jsx` -> auth + role guard
+- `src/services/api.js` -> Axios client
+- `src/services/authService.js` -> session helper
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Frontend flow
+1. app starts from `main.jsx`
+2. routes load from `App.jsx`
+3. protected pages check login and role
+4. dashboard components call service layer
+5. service layer calls backend APIs
 
-## React Compiler
+## Important code
+```jsx
+<Route path="/student/*" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```js
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+```
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```js
+const refreshResponse = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
+```
