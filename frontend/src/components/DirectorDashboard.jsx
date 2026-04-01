@@ -988,42 +988,62 @@ const styles = `
 
   /* UI refresh overrides */
   .dir-shell {
-    --bg: #0a0e27;
-    --bg-2: #0f1f3d;
-    --surface: rgba(9, 26, 48, 0.8);
-    --soft: rgba(16, 35, 63, 0.86);
-    --ink: #e8eaed;
-    --muted: #9cb9d9;
-    --border: rgba(149, 197, 255, 0.2);
-    --accent: #00b7ff;
+    --bg: #081225;
+    --bg-2: #102744;
+    --surface: rgba(13, 31, 56, 0.86);
+    --soft: rgba(20, 42, 73, 0.9);
+    --ink: #eaf2ff;
+    --muted: #a8bfd9;
+    --border: rgba(140, 183, 228, 0.26);
+    --accent: #3cb9ff;
+    --hover-glow: rgba(60, 185, 255, 0.24);
     background:
-      radial-gradient(circle at 8% 4%, rgba(0, 183, 255, 0.26), transparent 42%),
-      radial-gradient(circle at 92% 10%, rgba(255, 138, 91, 0.22), transparent 38%),
-      linear-gradient(145deg, #0a0e27, #0f1f3d 52%, #091426 100%);
+      radial-gradient(circle at 8% 4%, rgba(60, 185, 255, 0.22), transparent 42%),
+      radial-gradient(circle at 92% 10%, rgba(80, 235, 194, 0.16), transparent 38%),
+      linear-gradient(145deg, #081225, #102744 52%, #0b1a30 100%);
   }
 
   .dir-shell.light {
-    --bg: #eef5ff;
-    --bg-2: #f8fbff;
-    --surface: rgba(255, 255, 255, 0.92);
-    --soft: rgba(245, 250, 255, 0.95);
-    --ink: #0e2441;
-    --muted: #4d6b8b;
-    --border: rgba(13, 43, 83, 0.12);
-    --accent: #0f78d7;
+    --bg: #f4f9ff;
+    --bg-2: #ffffff;
+    --surface: rgba(255, 255, 255, 0.96);
+    --soft: rgba(237, 245, 255, 0.98);
+    --ink: #0f243e;
+    --muted: #4f6885;
+    --border: rgba(41, 86, 136, 0.16);
+    --accent: #1168c7;
+    --hover-glow: rgba(17, 104, 199, 0.18);
     background:
-      radial-gradient(circle at 10% 6%, rgba(15, 120, 215, 0.15), transparent 40%),
-      radial-gradient(circle at 88% 10%, rgba(239, 108, 52, 0.15), transparent 38%),
-      linear-gradient(160deg, #eef5ff, #f8fbff 48%, #eaf3ff 100%);
+      radial-gradient(circle at 10% 6%, rgba(17, 104, 199, 0.12), transparent 40%),
+      radial-gradient(circle at 88% 10%, rgba(47, 164, 255, 0.12), transparent 38%),
+      linear-gradient(160deg, #f4f9ff, #ffffff 48%, #eef5ff 100%);
   }
 
-  .dir-sidebar,
-  .cards article,
-  .chart,
-  .table,
-  .modal {
+  .dir-shell.dark .dir-sidebar {
+    background: rgba(8, 20, 38, 0.74);
+  }
+
+  .dir-shell.light .dir-sidebar {
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(8px);
+  }
+
+  .dir-shell.dark .dir-sidebar,
+  .dir-shell.dark .cards article,
+  .dir-shell.dark .chart,
+  .dir-shell.dark .table,
+  .dir-shell.dark .modal {
     border-radius: 18px;
     box-shadow: 0 16px 34px rgba(0, 10, 25, 0.28);
+  }
+
+  .dir-shell.light .dir-sidebar,
+  .dir-shell.light .cards article,
+  .dir-shell.light .chart,
+  .dir-shell.light .table,
+  .dir-shell.light .modal {
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(32, 73, 120, 0.12);
   }
 
   .dir-sidebar button:hover,
@@ -1031,8 +1051,10 @@ const styles = `
   .chart-head button:hover,
   .table button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 22px rgba(0, 183, 255, 0.22);
+    box-shadow: 0 10px 22px var(--hover-glow);
   }
+
+  .dir-shell.light .dir-loader { background: rgba(226, 236, 250, 0.35); }
 
   .cards article {
     animation: dirFadeUp 0.45s ease both;

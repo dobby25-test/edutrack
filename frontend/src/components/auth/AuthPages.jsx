@@ -516,35 +516,35 @@ const sharedCss = `
   /* Landing palette override */
   :root {
     --ink: #e8eaed;
-    --paper: #0a0e27;
-    --accent: #0066ff;
-    --mid: #9ca3af;
-    --border: rgba(255, 255, 255, 0.14);
+    --paper: #060a1a;
+    --accent: #00e5ff;
+    --mid: #8fa5c2;
+    --border: rgba(110, 216, 255, 0.24);
     --success: #00d9a3;
   }
 
   body {
     background:
-      radial-gradient(circle at 20% 30%, rgba(0, 102, 255, 0.16), transparent 44%),
-      radial-gradient(circle at 80% 70%, rgba(255, 51, 102, 0.14), transparent 40%),
-      #0a0e27 !important;
+      radial-gradient(circle at 16% 22%, rgba(0, 229, 255, 0.18), transparent 42%),
+      radial-gradient(circle at 84% 72%, rgba(255, 75, 216, 0.15), transparent 40%),
+      #060a1a !important;
     color: var(--ink);
     font-family: 'Outfit', sans-serif;
   }
 
   .auth-left {
-    background: linear-gradient(160deg, #0a0e27, #141835) !important;
+    background: linear-gradient(160deg, #050916, #0a1734) !important;
     border-right: 1px solid var(--border);
   }
 
   .auth-right {
-    background: linear-gradient(180deg, #0f1432 0%, #0a0e27 100%) !important;
+    background: linear-gradient(180deg, #0a1430 0%, #060a1a 100%) !important;
   }
 
   .auth-form-wrap {
     border: 1px solid var(--border);
-    background: rgba(20, 24, 53, 0.9) !important;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+    background: rgba(10, 20, 44, 0.88) !important;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45), 0 0 30px rgba(0, 229, 255, 0.12);
     border-radius: 16px;
     padding: 28px;
   }
@@ -559,7 +559,8 @@ const sharedCss = `
   }
 
   .auth-left-headline span {
-    color: #ff3366;
+    color: #ff4bd8;
+    text-shadow: 0 0 16px rgba(255, 75, 216, 0.35);
   }
 
   .auth-left-sub,
@@ -575,7 +576,7 @@ const sharedCss = `
   .field-select,
   .role-pill,
   .theme-toggle {
-    background: rgba(30, 36, 69, 0.8) !important;
+    background: rgba(17, 32, 66, 0.84) !important;
     border: 1px solid var(--border) !important;
     color: var(--ink) !important;
     font-family: 'Outfit', sans-serif !important;
@@ -584,24 +585,24 @@ const sharedCss = `
   .field-input:focus,
   .field-select:focus,
   .role-pill:hover {
-    border-color: #0066ff !important;
-    box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2);
+    border-color: #00e5ff !important;
+    box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.22), 0 0 18px rgba(0, 229, 255, 0.2);
   }
 
   .auth-btn {
-    background: linear-gradient(135deg, #0066ff 0%, #ff3366 100%) !important;
+    background: linear-gradient(135deg, #00e5ff 0%, #ff4bd8 100%) !important;
     border: none !important;
     color: #fff !important;
     border-radius: 12px;
   }
 
   .auth-btn:hover:not(:disabled) {
-    box-shadow: 0 10px 24px rgba(0, 102, 255, 0.34);
+    box-shadow: 0 10px 24px rgba(0, 229, 255, 0.3), 0 0 26px rgba(255, 75, 216, 0.26);
   }
 
   .role-pill.selected {
-    background: rgba(0, 102, 255, 0.22) !important;
-    border-color: #0066ff !important;
+    background: rgba(0, 229, 255, 0.2) !important;
+    border-color: #00e5ff !important;
   }
 
   [data-auth-theme='light'] {
@@ -640,6 +641,141 @@ const sharedCss = `
   [data-auth-theme='light'] .theme-toggle {
     color: #0f172a !important;
   }
+
+  /* Landing motion and richer hero treatment */
+  .auth-left { isolation: isolate; }
+  .auth-left-copy { max-width: 520px; }
+
+  .auth-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: color-mix(in srgb, #ffffff 90%, var(--accent));
+    animation: authPulse 2.4s ease-in-out infinite;
+  }
+
+  .auth-left-headline { text-wrap: balance; }
+
+  .auth-left-tags {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .auth-left-tags span {
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: color-mix(in srgb, #ffffff 84%, var(--accent));
+    backdrop-filter: blur(3px);
+  }
+
+  .auth-floating-grid {
+    position: absolute;
+    right: 22px;
+    top: 120px;
+    display: grid;
+    gap: 10px;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .auth-float-card {
+    min-width: 150px;
+    border-radius: 14px;
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
+    background: color-mix(in srgb, var(--paper) 32%, transparent);
+    backdrop-filter: blur(7px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34), 0 0 24px rgba(0, 229, 255, 0.18);
+    animation: authDrift 6s ease-in-out infinite;
+  }
+
+  .auth-float-card:nth-child(2) {
+    animation-delay: .9s;
+    transform: translateX(-24px);
+  }
+
+  .auth-float-card small {
+    display: block;
+    color: var(--mid);
+    margin-bottom: 4px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+
+  .auth-float-card strong {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    color: #e9fbff;
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 14px rgba(0, 229, 255, 0.36);
+  }
+
+  .auth-left-bg::before { animation: authOrbit 14s linear infinite; }
+  .auth-left-bg::after { animation: authOrbitReverse 18s linear infinite; }
+
+  .auth-left-stats {
+    padding-top: 14px;
+    border-top: 1px dashed color-mix(in srgb, var(--accent) 35%, var(--border));
+  }
+
+  [data-auth-theme='light'] .auth-kicker,
+  [data-auth-theme='light'] .auth-left-tags span {
+    color: #1e293b;
+  }
+
+  [data-auth-theme='light'] .auth-float-card {
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
+  }
+
+  [data-auth-theme='light'] .auth-float-card strong { color: #0f172a; }
+
+  @keyframes authDrift {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes authPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 102, 255, 0); }
+    50% { box-shadow: 0 0 0 8px rgba(0, 102, 255, 0.12); }
+  }
+
+  @keyframes authOrbit {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes authOrbitReverse {
+    0% { transform: rotate(45deg); }
+    100% { transform: rotate(-315deg); }
+  }
+
+  @media (max-width: 1100px) { .auth-floating-grid { display: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-kicker,
+    .auth-float-card,
+    .auth-left-bg::before,
+    .auth-left-bg::after {
+      animation: none !important;
+    }
+  }
 `;
 // â”€â”€â”€ Left Panel (shared) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -647,6 +783,16 @@ function LeftPanel({ headline, sub }) {
   return (
     <div className="auth-left">
       <div className="auth-left-bg" />
+      <div className="auth-floating-grid" aria-hidden="true">
+        <div className="auth-float-card">
+          <small>Live Projects</small>
+          <strong>128 Active</strong>
+        </div>
+        <div className="auth-float-card">
+          <small>Submission Rate</small>
+          <strong>92%</strong>
+        </div>
+      </div>
       <div className="auth-brand">
         <a href="/" className="auth-brand-mark">
           <div className="auth-brand-box">E</div>
@@ -654,8 +800,14 @@ function LeftPanel({ headline, sub }) {
         </a>
       </div>
       <div className="auth-left-copy">
+        <p className="auth-kicker">Campus Project Intelligence</p>
         <h1 className="auth-left-headline" dangerouslySetInnerHTML={{ __html: headline }} />
         <p className="auth-left-sub">{sub}</p>
+        <div className="auth-left-tags" aria-hidden="true">
+          <span>Track</span>
+          <span>Collaborate</span>
+          <span>Achieve</span>
+        </div>
       </div>
       <div className="auth-left-stats">
         <div className="stat-block">
